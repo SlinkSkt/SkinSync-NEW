@@ -1,0 +1,234 @@
+import Foundation
+
+// MARK: - DataStore protocol
+/// Abstract store used by all view models. Implemented by FileDataStore.
+protocol DataStore {
+    // Products
+    func loadProducts() throws -> [Product]
+    func save(products: [Product]) throws
+
+    // Routines
+    func loadRoutines() throws -> [Routine]
+    func save(routines: [Routine]) throws
+
+    // Face scans
+    func loadScans() throws -> [FaceScanResult]
+    func save(scans: [FaceScanResult]) throws
+
+    // Profile
+    func loadProfile() throws -> Profile
+    func save(profile: Profile) throws
+
+    // Notification preferences
+    func loadNotificationPrefs() throws -> NotificationPrefs
+    func save(notificationPrefs: NotificationPrefs) throws
+
+    // Daily logs (checkboxes done per day)
+    func loadDayLogs() throws -> [DayLog]
+    func save(dayLogs: [DayLog]) throws
+}
+
+// MARK: - FileDataStore
+/// JSON-backed store. Reads/writes to the app's Documents folder.
+/// On first run, falls back to bundled JSON (Copy Bundle Resources).
+final class FileDataStore: DataStore {
+
+    // Filenames used for JSON payloads
+    private enum FileName: String {
+        case products   = "products.json"
+        case routines   = "routines.json"
+        case scans      = "scans.json"
+        case profile    = "profile.json"
+        case notif      = "notification_prefs.json"
+        case daylogs    = "daylogs.json"
+    }
+
+    private let fm = FileManager.default
+
+   
+    // MARK: Public seeding (optional)
+    /// Call once on launch to ensure sample JSON exists in Documents.
+    /// - Copies bundled files if present
+    /// - Or creates sensible defaults for routines/products
+    func seedIfNeeded() {
+        // Seed products
+        do {
+            let prodURL = try docURL(FileName.products.rawValue)
+            if !fm.fileExists(atPath: prodURL.path) {
+                if let src = bundledURL(FileName.products.rawValue) {
+                    try fm.copyItem(at: src, to: prodURL)
+                    print("Seeded products.json from bundle")
+                } else {
+                    // If no bundle file, create empty array
+                    try save(products: [])
+                    print("Created empty products.json")
+                }
+            }
+        } catch { print("Products seed error: \(error)") }
+
+        // Seed routines
+        do {
+            let routinesURL = try docURL(FileName.routines.rawValue)
+            if !fm.fileExists(atPath: routinesURL.path) {
+                if let src = bundledURL(FileName.routines.rawValue) {
+                    try fm.copyItem(at: src, to: routinesURL)
+                    print("Seeded routines.json from bundle")
+                } else {
+                    // Create sensible defaults if nothing bundled
+                    let defaultRoutines = [
+                        Routine(
+                            title: "AM",
+                            slots: [
+                                RoutineSlot(step: "Cleanser", productID: nil),
+                                RoutineSlot(step: "Treatment", productID: nil),
+                                RoutineSlot(step: "Moisturiser", productID: nil),
+                                RoutineSlot(step: "Sunscreen", productID: nil)
+                            ]
+                        ),
+                        Routine(
+                            title: "PM",
+                            slots: [
+                                RoutineSlot(step: "Cleanser", productID: nil),
+                                RoutineSlot(step: "Treatment", productID: nil),
+                                RoutineSlot(step: "Moisturiser", productID: nil)
+                            ]
+                        )
+                    ]
+                    try save(routines: defaultRoutines)
+                    print("Created default routines.json")
+                }
+            }
+        } catch { print("Routines seed error: \(error)") }
+
+        // Other JSON files (scans, profile, notif, daylogs)
+        for name in [FileName.scans, .profile, .notif, .daylogs] {
+            do {
+                let dst = try docURL(name.rawValue)
+                guard !fm.fileExists(atPath: dst.path) else { continue }
+                if let src = bundledURL(name.rawValue) {
+                    try fm.copyItem(at: src, to: dst)
+                    print("Seeded \(name.rawValue) from bundle")
+                }
+            } catch {
+                print("Seed error \(name.rawValue): \(error)")
+            }
+        }
+    }
+
+    // MARK: - DataStore conformance
+
+    // Products
+    func loadProducts() throws -> [Product] {
+        try loadArray([Product].self, name: .products)
+    }
+    func save(products: [Product]) throws {
+        try saveEncodable(products, name: .products)
+    }
+
+    // Routines
+    func loadRoutines() throws -> [Routine] {
+        try loadArray([Routine].self, name: .routines)
+    }
+    func save(routines: [Routine]) throws {
+        try saveEncodable(routines, name: .routines)
+    }
+
+    // Face scans
+    func loadScans() throws -> [FaceScanResult] {
+        try loadArray([FaceScanResult].self, name: .scans)
+    }
+    func save(scans: [FaceScanResult]) throws {
+        try saveEncodable(scans, name: .scans)
+    }
+
+    // Profile
+    func loadProfile() throws -> Profile {
+        if let url = try? existingOrBundledURL(.profile) {
+            return try decode(Profile.self, from: url)
+        }
+        // sensible empty default if nothing bundled
+        return Profile(nickname: "", yearOfBirthRange: "", skinType: .normal, allergies: [], goals: [])
+    }
+    func save(profile: Profile) throws {
+        try saveEncodable(profile, name: .profile)
+    }
+
+    // Notification prefs
+    func loadNotificationPrefs() throws -> NotificationPrefs {
+        if let url = try? existingOrBundledURL(.notif) {
+            return try decode(NotificationPrefs.self, from: url)
+        }
+        return NotificationPrefs(enableAM: false, amHour: 7, amMinute: 30,
+                                 enablePM: false, pmHour: 21, pmMinute: 0)
+    }
+    func save(notificationPrefs: NotificationPrefs) throws {
+        try saveEncodable(notificationPrefs, name: .notif)
+    }
+
+    // Day logs
+    func loadDayLogs() throws -> [DayLog] {
+        try loadArray([DayLog].self, name: .daylogs)
+    }
+    func save(dayLogs: [DayLog]) throws {
+        try saveEncodable(dayLogs, name: .daylogs)
+    }
+
+    // MARK: - Generic helpers
+
+    private func loadArray<T: Decodable>(_ type: T.Type, name: FileName) throws -> T {
+        if let url = try? existingOrBundledURL(name) {
+            return try decode(T.self, from: url)
+        }
+        // empty array default if neither docs nor bundle exists
+        if T.self is [Any].Type { return [] as! T }
+        throw NSError(domain: "FileDataStore", code: 404,
+                      userInfo: [NSLocalizedDescriptionKey: "Missing \(name.rawValue)"])
+    }
+
+    private func saveEncodable<T: Encodable>(_ value: T, name: FileName) throws {
+        let url = try docURL(name.rawValue)
+        let data = try encoder.encode(value)
+        try data.write(to: url, options: .atomic)
+    }
+
+    private func existingOrBundledURL(_ name: FileName) throws -> URL {
+        let docs = try docURL(name.rawValue)
+        if fm.fileExists(atPath: docs.path) { return docs }
+        if let bundled = bundledURL(name.rawValue) { return bundled }
+        throw NSError(domain: "FileDataStore", code: 404,
+                      userInfo: [NSLocalizedDescriptionKey: "File \(name.rawValue) not found"])
+    }
+
+    // MARK: Paths
+
+    private func docURL(_ filename: String) throws -> URL {
+        let dir = try fm.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+        return dir.appendingPathComponent(filename)
+    }
+
+    private func bundledURL(_ filename: String) -> URL? {
+        let parts = filename.split(separator: ".", maxSplits: 1).map(String.init)
+        guard parts.count == 2 else { return nil }
+        return Bundle.main.url(forResource: parts[0], withExtension: parts[1])
+    }
+
+    // MARK: JSON codecs
+
+    private var decoder: JSONDecoder {
+        let d = JSONDecoder()
+        d.dateDecodingStrategy = .iso8601
+        return d
+    }
+
+    private var encoder: JSONEncoder {
+        let e = JSONEncoder()
+        e.dateEncodingStrategy = .iso8601
+        e.outputFormatting = [.prettyPrinted, .sortedKeys]
+        return e
+    }
+
+    private func decode<T: Decodable>(_ type: T.Type, from url: URL) throws -> T {
+        let data = try Data(contentsOf: url)
+        return try decoder.decode(T.self, from: data)
+    }
+}
