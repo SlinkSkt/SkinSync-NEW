@@ -2,7 +2,6 @@
 //  ProfileViewModel.swift
 //  SkinSync
 //
-//  Created by Zhen Xiao on 30/8/2025.
 //
 
 import Foundation
