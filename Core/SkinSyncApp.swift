@@ -9,11 +9,10 @@ import SwiftUI
 
 @main
 struct SkinSyncApp: App {
-    @StateObject private var appModel = AppModel()
+    init() {
+        FileDataStore().seedIfNeeded()   // seeds JSON into Documents if missing
+    }
     var body: some Scene {
-        WindowGroup {
-            RootView()
-                .environmentObject(appModel)
-        }
+        WindowGroup { RootView().environmentObject(AppModel()) }
     }
 }

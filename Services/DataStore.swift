@@ -26,6 +26,10 @@ protocol DataStore {
     // Daily logs (checkboxes done per day)
     func loadDayLogs() throws -> [DayLog]
     func save(dayLogs: [DayLog]) throws
+    
+    // DataStore.swift  (add to the protocol)
+    func loadFavoriteIDs() throws -> [UUID]
+    func save(favoriteIDs: [UUID]) throws
 }
 
 // MARK: - FileDataStore
@@ -41,6 +45,7 @@ final class FileDataStore: DataStore {
         case profile    = "profile.json"
         case notif      = "notification_prefs.json"
         case daylogs    = "daylogs.json"
+        case favorites  = "favorites.json"
     }
 
     private let fm = FileManager.default
@@ -172,7 +177,17 @@ final class FileDataStore: DataStore {
     func save(dayLogs: [DayLog]) throws {
         try saveEncodable(dayLogs, name: .daylogs)
     }
-
+    // FileDataStore
+    func loadFavoriteIDs() throws -> [UUID] {
+        // If not present yet, return empty
+        if let url = try? existingOrBundledURL(.favorites) {
+            return try decode([UUID].self, from: url)
+        }
+        return []
+    }
+    func save(favoriteIDs: [UUID]) throws {
+        try saveEncodable(favoriteIDs, name: .favorites)
+    }
     // MARK: - Generic helpers
 
     private func loadArray<T: Decodable>(_ type: T.Type, name: FileName) throws -> T {

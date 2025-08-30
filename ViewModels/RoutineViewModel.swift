@@ -17,7 +17,6 @@ final class RoutineViewModel: ObservableObject {
                              enablePM: false, pmHour: 21, pmMinute: 0)
     }
 
-    // MARK: - Load routines & products
     func load() {
         Task {
             let prods = (try? self.store.loadProducts()) ?? []
@@ -25,45 +24,60 @@ final class RoutineViewModel: ObservableObject {
             await MainActor.run {
                 self.productsByID = Dictionary(uniqueKeysWithValues: prods.map { ($0.id, $0) })
                 self.routines = r
-                
             }
-            print("Loaded routines: \(r.map { $0.title })")
+            // ✅ If there are no routines yet, create sensible defaults
+            await ensureDefaultRoutinesIfNeeded()
         }
     }
 
-    // MARK: - Set product for a routine slot
+    /// Create AM/PM with sensible slots if missing
+    func ensureDefaultRoutinesIfNeeded() async {
+        guard routines.isEmpty else { return }
+        let am = Routine(
+            title: "AM",
+            slots: [
+                RoutineSlot(step: "Cleanser"),
+                RoutineSlot(step: "Treatment"),
+                RoutineSlot(step: "Moisturiser"),
+                RoutineSlot(step: "Sunscreen")
+            ]
+        )
+        let pm = Routine(
+            title: "PM",
+            slots: [
+                RoutineSlot(step: "Cleanser"),
+                RoutineSlot(step: "Treatment"),
+                RoutineSlot(step: "Moisturiser")
+            ]
+        )
+        routines = [am, pm]
+        save()
+    }
+
     func set(product: Product, for routineID: UUID, slotID: UUID) {
         guard let ridx = routines.firstIndex(where: { $0.id == routineID }),
               let sidx = routines[ridx].slots.firstIndex(where: { $0.id == slotID }) else { return }
 
-        // Link product ID into the chosen slot
         routines[ridx].slots[sidx].productID = product.id
-
-        // Ensure product is tracked in the dictionary
         productsByID[product.id] = product
 
-        // Save changes
+        // Save both routines and products (products now include persisted IDs)
         save()
+        try? store.save(products: Array(productsByID.values))
+
+        objectWillChange.send()
     }
 
-    // MARK: - Save routines & products
     func save() {
-        do {
-            try store.save(routines: routines)
-            try store.save(products: Array(productsByID.values))
-        } catch {
-            print("Failed to save routines/products: \(error)")
-        }
+        do { try store.save(routines: routines) } catch { }
     }
 
-    // MARK: - Notifications
+    // MARK: Notifications
     func applyNotificationPrefs(_ prefs: NotificationPrefs) async {
         self.notif = prefs
         try? store.save(notificationPrefs: prefs)
-
         let granted = await scheduler.requestAuth()
         guard granted else { return }
-
         if prefs.enableAM {
             try? await scheduler.scheduleDaily(identifier: "skinsync.am",
                                                hour: prefs.amHour, minute: prefs.amMinute,
@@ -71,7 +85,6 @@ final class RoutineViewModel: ObservableObject {
         } else {
             await scheduler.cancel(identifier: "skinsync.am")
         }
-
         if prefs.enablePM {
             try? await scheduler.scheduleDaily(identifier: "skinsync.pm",
                                                hour: prefs.pmHour, minute: prefs.pmMinute,

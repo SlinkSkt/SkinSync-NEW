@@ -18,7 +18,6 @@ enum SkinGoal: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
-// All strings used in your products.json are covered here.
 enum Concern: String, Codable, CaseIterable, Identifiable, Hashable {
     case acne, redness, pigmentation, sensitivity, aging, dryness, oiliness, pores
     var id: String { rawValue }
@@ -27,7 +26,7 @@ enum Concern: String, Codable, CaseIterable, Identifiable, Hashable {
 
 struct Profile: Codable, Equatable {
     var nickname: String
-    var yearOfBirthRange: String // e.g., "2001-2005"
+    var yearOfBirthRange: String
     var skinType: SkinType
     var allergies: [String]
     var goals: [SkinGoal]
@@ -42,9 +41,7 @@ struct Ingredient: Identifiable, Codable, Hashable {
     var role: String
     var note: String?
 
-    private enum CodingKeys: String, CodingKey {
-        case inciName, commonName, role, note
-    }
+    private enum CodingKeys: String, CodingKey { case inciName, commonName, role, note }
 
     init(inciName: String, commonName: String, role: String, note: String?) {
         self.inciName = inciName
@@ -59,7 +56,7 @@ struct Ingredient: Identifiable, Codable, Hashable {
         self.commonName = try c.decode(String.self, forKey: .commonName)
         self.role = try c.decode(String.self, forKey: .role)
         self.note = try c.decodeIfPresent(String.self, forKey: .note)
-        self.id = UUID()
+        self.id = UUID() // synthesize
     }
 }
 
@@ -68,22 +65,30 @@ struct Product: Identifiable, Codable, Hashable {
     var name: String
     var brand: String
     var category: String
-    var imageURL: String?
+    var assetName: String            // assets-only image name
     var concerns: [Concern]
     var ingredients: [Ingredient]
     var barcode: String
     var rating: Double?
 
     private enum CodingKeys: String, CodingKey {
-        case name, brand, category, imageURL, concerns, ingredients, barcode, rating
+        case id, name, brand, category, assetName, concerns, ingredients, barcode, rating
     }
 
-    init(name: String, brand: String, category: String, imageURL: String?, concerns: [Concern],
-         ingredients: [Ingredient], barcode: String, rating: Double?) {
+    init(id: UUID = UUID(),
+         name: String,
+         brand: String,
+         category: String,
+         assetName: String,
+         concerns: [Concern],
+         ingredients: [Ingredient],
+         barcode: String,
+         rating: Double?) {
+        self.id = id
         self.name = name
         self.brand = brand
         self.category = category
-        self.imageURL = imageURL
+        self.assetName = assetName
         self.concerns = concerns
         self.ingredients = ingredients
         self.barcode = barcode
@@ -92,28 +97,41 @@ struct Product: Identifiable, Codable, Hashable {
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.id          = try c.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()   //keep existing ID if present
         self.name        = try c.decode(String.self, forKey: .name)
         self.brand       = try c.decode(String.self, forKey: .brand)
         self.category    = try c.decode(String.self, forKey: .category)
-        self.imageURL    = try c.decodeIfPresent(String.self, forKey: .imageURL)
+        self.assetName   = try c.decode(String.self, forKey: .assetName)
         self.concerns    = try c.decode([Concern].self, forKey: .concerns)
         self.ingredients = try c.decode([Ingredient].self, forKey: .ingredients)
         self.barcode     = try c.decode(String.self, forKey: .barcode)
         self.rating      = try c.decodeIfPresent(Double.self, forKey: .rating)
-        self.id = UUID()
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id)                        // persist the UUID
+        try c.encode(name, forKey: .name)
+        try c.encode(brand, forKey: .brand)
+        try c.encode(category, forKey: .category)
+        try c.encode(assetName, forKey: .assetName)
+        try c.encode(concerns, forKey: .concerns)
+        try c.encode(ingredients, forKey: .ingredients)
+        try c.encode(barcode, forKey: .barcode)
+        try c.encodeIfPresent(rating, forKey: .rating)
     }
 }
 // MARK: - Routines
 
 struct RoutineSlot: Identifiable, Codable, Hashable {
     var id: UUID = UUID()
-    var step: String        // "Cleanser", "Treatment", "Moisturiser", "Sunscreen", etc.
+    var step: String
     var productID: UUID?
 }
 
 struct Routine: Identifiable, Codable, Hashable {
     var id: UUID = UUID()
-    var title: String       // "AM" or "PM"
+    var title: String   // "AM" or "PM"
     var slots: [RoutineSlot]
 }
 
@@ -133,17 +151,13 @@ struct NotificationPrefs: Codable, Equatable {
     var enablePM: Bool; var pmHour: Int; var pmMinute: Int
 }
 
-// MARK: - Daily Progress (no database)
+// MARK: - Day Log
 
 struct DayLog: Identifiable, Codable, Hashable {
     var id: UUID = UUID()
-    /// Date-only key in ISO format (YYYY-MM-DD)
     var dateKey: String
-    /// Completed routine slot IDs for this day (AM/PM combined)
     var completedSlotIDs: [UUID]
 }
-
-// MARK: - Helpers
 
 extension Date {
     var skinsyncDateKey: String {

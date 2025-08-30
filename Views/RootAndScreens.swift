@@ -22,6 +22,9 @@ struct RootView: View {
                 HomeView(theme: theme)
                     .environmentObject(homeVM)
                     .navigationTitle("Home")
+                    .navigationDestination(for: Product.self) { p in
+                        ProductDetailView(product: p, theme: theme)
+                    }
             }
             .environmentObject(routineVM)
             .tabItem { Label("Home", systemImage: "house") }
@@ -31,17 +34,17 @@ struct RootView: View {
                 ScanScreen(theme: theme)
                     .environmentObject(scanVM)
                     .navigationTitle("Scan")
+                    .navigationDestination(for: Product.self) { p in
+                        ProductDetailView(product: p, theme: theme)
+                    }
             }
             .environmentObject(routineVM)
             .tabItem { Label("Scan", systemImage: "viewfinder") }
 
-            // Routine (Timeline)
+            // Routine — use the SAME RoutineViewModel as Products/ProductDetailView
             NavigationStack {
                 MyRoutineScreen(theme: theme)
-                    .environmentObject(
-                        TimelineViewModel(store: FileDataStore(),
-                                          scheduler: LocalNotificationScheduler())
-                    )
+                    .environmentObject(routineVM)  // <— key change (was TimelineViewModel)
                     .navigationTitle("Routine")
             }
             .tabItem { Label("Routine", systemImage: "calendar") }
@@ -51,8 +54,11 @@ struct RootView: View {
                 ProductsScreen(theme: theme)
                     .environmentObject(productsVM)
                     .navigationTitle("Products")
+                    .navigationDestination(for: Product.self) { p in
+                        ProductDetailView(product: p, theme: theme)
+                    }
             }
-            .environmentObject(routineVM) // so ProductDetailView can add to routines
+            .environmentObject(routineVM)
             .tabItem { Label("Products", systemImage: "books.vertical") }
 
             // Profile
@@ -65,6 +71,7 @@ struct RootView: View {
         }
         .tint(theme.primary)
         .onAppear {
+            // initial loads
             homeVM.load()
             productsVM.load()
             routineVM.load()
@@ -113,9 +120,6 @@ struct HomeView: View {
                 }
             }
             .padding()
-        }
-        .navigationDestination(for: Product.self) { p in
-            ProductDetailView(product: p, theme: theme)
         }
         .onAppear { vm.load() }
     }
@@ -196,9 +200,6 @@ struct ScanScreen: View {
             }
             Spacer()
         }
-        .navigationDestination(for: Product.self) { p in
-            ProductDetailView(product: p, theme: theme)
-        }
     }
 }
 
@@ -269,11 +270,15 @@ struct ProfileScreen: View {
 struct ProductRow: View {
     let product: Product
     let theme: AppTheme
+
     var body: some View {
         HStack(spacing: 12) {
-            AsyncRemoteImage(url: URL(string: product.imageURL ?? ""), placeholderSystemName: "photo")
+            Image(product.assetName)
+                .resizable()
+                .scaledToFill()
                 .frame(width: 64, height: 64)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
+
             VStack(alignment: .leading, spacing: 4) {
                 Text(product.name).font(.headline)
                 Text(product.brand).font(.subheadline).foregroundStyle(.secondary)
@@ -281,103 +286,6 @@ struct ProductRow: View {
             }
         }
         .padding(.vertical, 6)
-    }
-}
-
-struct ProductDetailView: View {
-    let product: Product
-    let theme: AppTheme
-    @EnvironmentObject private var routineVM: RoutineViewModel
-    @State private var showingAssign = false
-    @State private var selectedRoutineID: UUID?
-    @State private var selectedSlotID: UUID?
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                AsyncRemoteImage(url: URL(string: product.imageURL ?? ""), placeholderSystemName: "photo")
-                    .frame(height: 220)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-
-                Text(product.name).font(.title.bold())
-                Text(product.brand).font(.title3).foregroundStyle(.secondary)
-                if let r = product.rating { Label(String(format: "%.1f ★", r), systemImage: "star.fill") }
-
-                Divider()
-                Text("Ingredients").font(.headline)
-                IngredientCloud(ingredients: product.ingredients).tint(theme.primary)
-
-                Divider()
-                Text("Addresses").font(.headline)
-                HStack {
-                    ForEach(product.concerns) { c in
-                        Text(c.title).font(.caption)
-                            .padding(.horizontal, 8).padding(.vertical, 4)
-                            .background(theme.primary.opacity(0.15))
-                            .foregroundStyle(theme.primary)
-                            .clipShape(Capsule())
-                    }
-                }
-            }
-            .padding()
-        }
-        .navigationTitle("Product")
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    // Preselect first routine & first slot for convenience
-                    if selectedRoutineID == nil { selectedRoutineID = routineVM.routines.first?.id }
-                    if selectedSlotID == nil, let rid = selectedRoutineID,
-                       let slot = routineVM.routines.first(where: {$0.id == rid})?.slots.first {
-                        selectedSlotID = slot.id
-                    }
-                    showingAssign = true
-                } label: {
-                    Label("Add to Routine", systemImage: "plus.circle")
-                }
-            }
-        }
-        .sheet(isPresented: $showingAssign) {
-            NavigationStack {
-                Form {
-                    Section("Choose Routine") {
-                        Picker("Routine", selection: Binding(get: {
-                            selectedRoutineID ?? routineVM.routines.first?.id
-                        }, set: { selectedRoutineID = $0 })) {
-                            ForEach(routineVM.routines) { r in
-                                Text(r.title).tag(Optional(r.id))
-                            }
-                        }
-                    }
-                    if let rid = selectedRoutineID,
-                       let routine = routineVM.routines.first(where: { $0.id == rid }) {
-                        Section("Choose Step") {
-                            Picker("Step", selection: Binding(get: {
-                                selectedSlotID ?? routine.slots.first?.id
-                            }, set: { selectedSlotID = $0 })) {
-                                ForEach(routine.slots) { s in
-                                    Text(s.step).tag(Optional(s.id))
-                                }
-                            }
-                        }
-                    }
-                }
-                .navigationTitle("Add to Routine")
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel") { showingAssign = false }
-                    }
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("Add") {
-                            guard let rid = selectedRoutineID, let sid = selectedSlotID else { return }
-                            routineVM.set(product: product, for: rid, slotID: sid)
-                            showingAssign = false
-                        }
-                    }
-                }
-            }
-            .presentationDetents([.medium, .large])
-        }
     }
 }
 

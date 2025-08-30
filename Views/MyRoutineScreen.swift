@@ -1,9 +1,14 @@
 import SwiftUI
 
 struct MyRoutineScreen: View {
-    @EnvironmentObject private var vm: TimelineViewModel
+    // Uses the same RoutineViewModel the app injects in RootView
+    @EnvironmentObject private var vm: RoutineViewModel
     @EnvironmentObject private var app: AppModel
     let theme: AppTheme
+
+    // Local date state for the week strip
+    @State private var selectedDate: Date = Date()
+    private let cal = Calendar(identifier: .gregorian)
 
     var body: some View {
         ScrollView {
@@ -12,7 +17,7 @@ struct MyRoutineScreen: View {
                 // Header with month + week strip
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Text(vm.selectedDate, format: .dateTime.year().month(.wide))
+                        Text(selectedDate, format: .dateTime.year().month(.wide))
                             .font(.largeTitle.bold())
                         Spacer()
                         HStack(spacing: 12) {
@@ -23,83 +28,66 @@ struct MyRoutineScreen: View {
                     }
                     WeekStripMR(
                         theme: theme,
-                        days: vm.week(for: vm.selectedDate),
-                        selected: vm.selectedDate
-                    ) { d in vm.selectedDate = d }
+                        days: week(for: selectedDate),
+                        selected: selectedDate
+                    ) { d in selectedDate = d }
                 }
                 .padding(.horizontal)
 
                 // AM / PM cards
                 VStack(spacing: 16) {
-                    RoutineCardMR(
+                    RoutineCardMR_NoTicks(
                         title: "Rise and Shine",
                         icon: "alarm",
                         time: amTimeString,
                         color: theme.primary,
-                        steps: steps(for: "AM"),
-                        isDone: vm.isDone(_:),
-                        toggle: vm.toggle
+                        steps: steps(for: "AM")
                     )
-                    RoutineCardMR(
+                    RoutineCardMR_NoTicks(
                         title: "Wind Down",
                         icon: "moon",
                         time: pmTimeString,
                         color: theme.primary,
-                        steps: steps(for: "PM"),
-                        isDone: vm.isDone(_:),
-                        toggle: vm.toggle
+                        steps: steps(for: "PM")
                     )
                 }
                 .padding(.horizontal)
 
-                // Reminder controls
-                GroupBox("Reminders") {
-                    VStack(alignment: .leading) {
-                        Toggle("Enable AM reminder", isOn: Binding(
-                            get: { vm.notif.enableAM },
-                            set: { vm.notif.enableAM = $0; Task { await vm.applyNotificationPrefs(vm.notif) } }
-                        ))
-                        DatePicker("AM time",
-                                   selection: Binding<Date>(
-                                    get: { dateFrom(hour: vm.notif.amHour, minute: vm.notif.amMinute) },
-                                    set: { d in
-                                        let c = Calendar.current.dateComponents([.hour,.minute], from: d)
-                                        vm.notif.amHour = c.hour ?? 7
-                                        vm.notif.amMinute = c.minute ?? 30
-                                        Task { await vm.applyNotificationPrefs(vm.notif) }
-                                    }),
-                                   displayedComponents: .hourAndMinute)
-                        .disabled(!vm.notif.enableAM)
-
-                        Divider().padding(.vertical, 6)
-
-                        Toggle("Enable PM reminder", isOn: Binding(
-                            get: { vm.notif.enablePM },
-                            set: { vm.notif.enablePM = $0; Task { await vm.applyNotificationPrefs(vm.notif) } }
-                        ))
-                        DatePicker("PM time",
-                                   selection: Binding<Date>(
-                                    get: { dateFrom(hour: vm.notif.pmHour, minute: vm.notif.pmMinute) },
-                                    set: { d in
-                                        let c = Calendar.current.dateComponents([.hour,.minute], from: d)
-                                        vm.notif.pmHour = c.hour ?? 21
-                                        vm.notif.pmMinute = c.minute ?? 0
-                                        Task { await vm.applyNotificationPrefs(vm.notif) }
-                                    }),
-                                   displayedComponents: .hourAndMinute)
-                        .disabled(!vm.notif.enablePM)
+                // Reminders subpage entry
+                NavigationLink {
+                    RemindersSettingsView()
+                        .environmentObject(vm) // pass same VM
+                } label: {
+                    GroupBox {
+                        HStack {
+                            Label("Reminders", systemImage: "bell.badge")
+                                .font(.headline)
+                            Spacer()
+                            VStack(alignment: .trailing, spacing: 4) {
+                                Text("AM: \(amTimeString)")
+                                    .foregroundStyle(vm.notif.enableAM ? .primary : .secondary)
+                                Text("PM: \(pmTimeString)")
+                                    .foregroundStyle(vm.notif.enablePM ? .primary : .secondary)
+                            }
+                            Image(systemName: "chevron.right")
+                                .foregroundStyle(.secondary)
+                        }
                     }
+                    .padding(.horizontal)
                 }
-                .padding(.horizontal)
             }
             .padding(.vertical, 8)
         }
-        .onAppear { vm.load() }
+        .onAppear {
+            vm.load()                // load routines/products + notif prefs
+            selectedDate = Date()
+        }
         .navigationTitle("Routine")
     }
 
     // MARK: Helpers
 
+    // Build step list for "AM" or "PM"
     private func steps(for title: String) -> [(slot: RoutineSlot, productName: String?)] {
         guard let routine = vm.routines.first(where: { $0.title.lowercased() == title.lowercased() }) else { return [] }
         return routine.slots.map { slot in
@@ -121,12 +109,15 @@ struct MyRoutineScreen: View {
         Calendar.current.date(from: DateComponents(hour: hour, minute: minute)) ?? Date()
     }
     private func moveDay(_ delta: Int) {
-        let cal = Calendar.current
-        vm.selectedDate = cal.date(byAdding: .day, value: delta, to: vm.selectedDate) ?? vm.selectedDate
+        selectedDate = cal.date(byAdding: .day, value: delta, to: selectedDate) ?? selectedDate
+    }
+    private func week(for base: Date) -> [Date] {
+        let start = cal.date(from: cal.dateComponents([.yearForWeekOfYear, .weekOfYear], from: base)) ?? base
+        return (0..<7).compactMap { cal.date(byAdding: .day, value: $0, to: start) }
     }
 }
 
-// Compact weekly strip (unique names to avoid collisions)
+// Weekly strip (unchanged)
 private struct WeekStripMR: View {
     let theme: AppTheme
     let days: [Date]
@@ -158,15 +149,13 @@ private struct WeekStripMR: View {
     }
 }
 
-// Routine card (unique names)
-private struct RoutineCardMR: View {
+// Routine card (display-only)
+private struct RoutineCardMR_NoTicks: View {
     let title: String
     let icon: String
     let time: String
     let color: Color
     let steps: [(slot: RoutineSlot, productName: String?)]
-    var isDone: (UUID) -> Bool
-    var toggle: (UUID) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -178,13 +167,9 @@ private struct RoutineCardMR: View {
             Text(time).foregroundStyle(.secondary)
             ForEach(steps, id: \.slot.id) { pair in
                 HStack(spacing: 12) {
-                    Button {
-                        toggle(pair.slot.id)
-                    } label: {
-                        Image(systemName: isDone(pair.slot.id) ? "checkmark.circle.fill" : "circle")
-                            .font(.title2)
-                            .foregroundColor(isDone(pair.slot.id) ? color : .secondary)
-                    }
+                    Image(systemName: "circle.fill")
+                        .font(.caption)
+                        .foregroundStyle(color.opacity(0.8))
                     VStack(alignment: .leading, spacing: 2) {
                         Text(pair.slot.step).bold()
                         Text(pair.productName ?? "No product selected")
