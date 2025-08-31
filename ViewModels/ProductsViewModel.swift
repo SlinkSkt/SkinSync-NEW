@@ -6,55 +6,62 @@ final class ProductsViewModel: ObservableObject {
     @Published var query: String = ""
     @Published var debugMessage: String? = nil
 
-    // favourites are stored as product UUIDs
+    /// Favourites are stored as product UUIDs.
     @Published private(set) var favoriteIDs: Set<UUID> = []
 
     private let store: DataStore
 
     init(store: DataStore) { self.store = store }
 
+    /// Convenience entry point for Views (non-async).
     func load() {
-        Task {
-            // 1) Load favorites first (so UI can instantly show hearts)
-            let favs = (try? self.store.loadFavoriteIDs()) ?? []
-            self.favoriteIDs = Set(favs)
+        Task { await loadAsync() }
+    }
 
-            // 2) Load products from Documents or bundle
-            if let items = try? self.store.loadProducts(), !items.isEmpty {
-                self.products = items
-                self.debugMessage = nil
-                return
+    /// Async-friendly loader ( for tests or future expansion).
+    func loadAsync() async {
+        // Load favorites first so hearts show immediately
+        let favs = (try? store.loadFavoriteIDs()) ?? []
+        favoriteIDs = Set(favs)
+
+        // Load products from Documents or bundle
+        if let items = try? store.loadProducts(), !items.isEmpty {
+            products = items
+            debugMessage = nil
+            return
+        }
+
+        // Fallback: seed from bundle on first run
+        if let url = Bundle.main.url(forResource: "products", withExtension: "json") {
+            do {
+                let data = try Data(contentsOf: url)
+                let items = try JSONDecoder().decode([Product].self, from: data)
+
+                // Save to Documents so future loads come from the same place
+                try? store.save(products: items)
+
+                products = items
+                debugMessage = items.isEmpty ? "Loaded 0 products from bundle." : nil
+            } catch {
+                products = []
+                debugMessage = "Decode failed: \(error.localizedDescription)"
             }
-
-            // Fallback: read directly from bundle (first run)
-            if let url = Bundle.main.url(forResource: "products", withExtension: "json") {
-                do {
-                    let data = try Data(contentsOf: url)
-                    let items = try JSONDecoder().decode([Product].self, from: data)
-
-                    // Save to Documents so the file includes the persisted IDs
-                    try? self.store.save(products: items)
-
-                    self.products = items
-                    self.debugMessage = items.isEmpty ? "Loaded 0 products from bundle." : nil
-                } catch {
-                    self.products = []
-                    self.debugMessage = "Decode failed: \(error.localizedDescription)"
-                }
-            } else {
-                self.products = []
-                self.debugMessage = "Bundle couldn’t find products.json"
-            }
+        } else {
+            products = []
+            debugMessage = "Bundle couldn’t find products.json"
         }
     }
 
-    // MARK: Filtering
+    // MARK: - Derived collections
+
     var filtered: [Product] {
         guard !query.isEmpty else { return products }
+        let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !q.isEmpty else { return products }
         return products.filter {
-            $0.name.localizedCaseInsensitiveContains(query) ||
-            $0.brand.localizedCaseInsensitiveContains(query) ||
-            $0.category.localizedCaseInsensitiveContains(query)
+            $0.name.localizedCaseInsensitiveContains(q) ||
+            $0.brand.localizedCaseInsensitiveContains(q) ||
+            $0.category.localizedCaseInsensitiveContains(q)
         }
     }
 
@@ -62,7 +69,8 @@ final class ProductsViewModel: ObservableObject {
         products.filter { favoriteIDs.contains($0.id) }
     }
 
-    // MARK: Favourites
+    // MARK: - Favourites
+
     func toggleFavorite(_ product: Product) {
         if favoriteIDs.contains(product.id) {
             favoriteIDs.remove(product.id)
@@ -70,7 +78,6 @@ final class ProductsViewModel: ObservableObject {
             favoriteIDs.insert(product.id)
         }
         persistFavorites()
-        objectWillChange.send()
     }
 
     func isFavorite(_ product: Product) -> Bool {
@@ -78,6 +85,11 @@ final class ProductsViewModel: ObservableObject {
     }
 
     private func persistFavorites() {
-        try? store.save(favoriteIDs: Array(favoriteIDs))
+        do {
+            try store.save(favoriteIDs: Array(favoriteIDs))
+        } catch {
+            // capture an error message for debugging
+            debugMessage = "Failed to save favourites: \(error.localizedDescription)"
+        }
     }
 }

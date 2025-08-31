@@ -8,21 +8,38 @@ struct ProductDetailView: View {
     @EnvironmentObject private var routineVM: RoutineViewModel
     @State private var showingAssign = false
 
-    // Index-based selections (rock-solid; no invalid tag warnings)
+    // Index-based selections
     @State private var routineIndex: Int = 0
     @State private var slotIndex: Int = 0
 
-    // Ensure indices are always valid
+    // MARK: - Safe accessors
+
+    private var routines: [Routine] {
+        routineVM.routines
+    }
+
+    /// Currently selected routine if the index is valid.
+    private var currentRoutine: Routine? {
+        guard routineIndex >= 0, routineIndex < routines.count else { return nil }
+        return routines[routineIndex]
+    }
+
+    /// Slots for the current routine (or empty).
+    private var currentSlots: [RoutineSlot] {
+        currentRoutine?.slots ?? []
+    }
+
+    // Keep indices in range whenever underlying data changes.
     private func clampSelections() {
-        let rc = routineVM.routines.count
-        if rc == 0 {
+        if routines.isEmpty {
             routineIndex = 0
             slotIndex = 0
             return
         }
-        if routineIndex < 0 || routineIndex >= rc { routineIndex = 0 }
-
-        let sc = routineVM.routines[routineIndex].slots.count
+        if routineIndex < 0 || routineIndex >= routines.count {
+            routineIndex = 0
+        }
+        let sc = currentSlots.count
         if sc == 0 {
             slotIndex = 0
         } else if slotIndex < 0 || slotIndex >= sc {
@@ -30,11 +47,11 @@ struct ProductDetailView: View {
         }
     }
 
-    // Prefill to first routine/slot for convenience
+    // Prefill to first routine/slot
     private func prefillIfNeeded() {
-        if routineVM.routines.isEmpty { return }
-        if routineIndex < 0 || routineIndex >= routineVM.routines.count { routineIndex = 0 }
-        if slotIndex < 0 || slotIndex >= routineVM.routines[routineIndex].slots.count { slotIndex = 0 }
+        guard !routines.isEmpty else { return }
+        if routineIndex < 0 || routineIndex >= routines.count { routineIndex = 0 }
+        if slotIndex < 0 || slotIndex >= currentSlots.count { slotIndex = 0 }
     }
 
     var body: some View {
@@ -65,7 +82,7 @@ struct ProductDetailView: View {
 
                 Divider()
 
-                Text("Addresses")
+                Text("Targets")
                     .font(.headline)
                 HStack {
                     ForEach(product.concerns) { c in
@@ -85,13 +102,13 @@ struct ProductDetailView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    // Make sure routines exist, then clamp the indices
-                    if routineVM.routines.isEmpty {
-                        Task {
-                            await routineVM.ensureDefaultRoutinesIfNeeded()
-                            clampSelections()
-                            showingAssign = true
-                        }
+                    // Ensure routines exist, then clamp and present
+                    if routines.isEmpty {
+                        // If your ensureDefaultRoutinesIfNeeded() is async, do:
+                        // Task { await routineVM.ensureDefaultRoutinesIfNeeded(); clampSelections(); showingAssign = true }
+                        routineVM.ensureDefaultRoutinesIfNeeded()
+                        clampSelections()
+                        showingAssign = true
                     } else {
                         clampSelections()
                         showingAssign = true
@@ -104,7 +121,7 @@ struct ProductDetailView: View {
         .sheet(isPresented: $showingAssign) {
             NavigationStack {
                 Form {
-                    if routineVM.routines.isEmpty {
+                    if routines.isEmpty {
                         Section {
                             Text("No routines found. Create default AM/PM routines first, then assign this product to a step.")
                                 .foregroundStyle(.secondary)
@@ -112,10 +129,9 @@ struct ProductDetailView: View {
                         }
                         Section {
                             Button {
-                                Task {
-                                    await routineVM.ensureDefaultRoutinesIfNeeded()
-                                    clampSelections()
-                                }
+                                // If async, wrap in Task { await … }
+                                routineVM.ensureDefaultRoutinesIfNeeded()
+                                clampSelections()
                             } label: {
                                 Label("Create AM & PM routines", systemImage: "calendar.badge.plus")
                             }
@@ -123,11 +139,11 @@ struct ProductDetailView: View {
                     } else {
                         Section("Choose Routine") {
                             Picker("Routine", selection: $routineIndex) {
-                                ForEach(routineVM.routines.indices, id: \.self) { i in
-                                    Text(routineVM.routines[i].title).tag(i)
+                                ForEach(routines.indices, id: \.self) { i in
+                                    Text(routines[i].title).tag(i)
                                 }
                             }
-                            .onChange(of: routineIndex) { _, _ in
+                            .onChange(of: routineIndex) {
                                 // When routine changes, reset slot to first available
                                 slotIndex = 0
                                 clampSelections()
@@ -135,20 +151,16 @@ struct ProductDetailView: View {
                         }
 
                         Section("Choose Step") {
-                            let routines = routineVM.routines
-                            if routineIndex < routines.count {
-                                let slots = routines[routineIndex].slots
+                            if currentSlots.isEmpty {
+                                Text("No steps available").foregroundStyle(.secondary)
+                            } else {
                                 Picker("Step", selection: $slotIndex) {
-                                    ForEach(slots.indices, id: \.self) { j in
-                                        Text(slots[j].step).tag(j)
+                                    ForEach(currentSlots.indices, id: \.self) { j in
+                                        Text(currentSlots[j].step).tag(j)
                                     }
                                 }
-                            } else {
-                                // If routines changed and routineIndex became invalid, reset safely
-                                Text("No steps available").foregroundStyle(.secondary)
                             }
                         }
-                        
                     }
                 }
                 .navigationTitle("Add to Routine")
@@ -158,22 +170,19 @@ struct ProductDetailView: View {
                     }
                     ToolbarItem(placement: .confirmationAction) {
                         Button("Add") {
-                            guard !routineVM.routines.isEmpty else { return }
-                            let routine = routineVM.routines[routineIndex]
-                            guard !routine.slots.isEmpty else { return }
-                            let slot = routine.slots[slotIndex]
+                            guard let routine = currentRoutine, !currentSlots.isEmpty else { return }
+                            let slot = currentSlots[slotIndex]
                             routineVM.set(product: product, for: routine.id, slotID: slot.id)
                             showingAssign = false
                         }
-                        .disabled(routineVM.routines.isEmpty ||
-                                  routineVM.routines[routineIndex].slots.isEmpty)
+                        .disabled(currentRoutine == nil || currentSlots.isEmpty)
                     }
                 }
                 .onAppear {
                     prefillIfNeeded()
                     clampSelections()
                 }
-                .onChange(of: routineVM.routines) { _, _ in
+                .onChange(of: routines) { _, _ in
                     clampSelections()
                 }
             }

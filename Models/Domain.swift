@@ -1,13 +1,21 @@
 // Models/Domain.swift
+// Defines the core domain models for the SkinSync app.
+// Each struct/enum here represents a piece of the app’s data model,
+// and most conform to `Codable` (for JSON persistence) and `Identifiable` (for SwiftUI lists).
+// https://docs.swift.org/swift-book/documentation/the-swift-programming-language/enumerations/ - Zhen Xiao
+// https://developer.apple.com/documentation/foundation/uuid
+// Week 4 practical Note: JSONDECODER
 import Foundation
 
 // MARK: - User & Skin
 
+/// Supported skin types
 enum SkinType: String, Codable, CaseIterable, Identifiable {
     case normal, dry, oily, combination, sensitive
     var id: String { rawValue }
 }
 
+/// Goals a user might track for their skincare routine
 enum SkinGoal: String, Codable, CaseIterable, Identifiable {
     case clearAcne = "Clear Acne"
     case reduceRedness = "Reduce Redness"
@@ -18,12 +26,14 @@ enum SkinGoal: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+/// Common skin concerns detected or tracked
 enum Concern: String, Codable, CaseIterable, Identifiable, Hashable {
     case acne, redness, pigmentation, sensitivity, aging, dryness, oiliness, pores
     var id: String { rawValue }
     var title: String { rawValue.capitalized }
 }
 
+/// User profile with basic demographic and skin information
 struct Profile: Codable, Equatable {
     var nickname: String
     var yearOfBirthRange: String
@@ -34,12 +44,13 @@ struct Profile: Codable, Equatable {
 
 // MARK: - Products
 
+/// A skincare ingredient
 struct Ingredient: Identifiable, Codable, Hashable {
     var id: UUID = UUID()
-    var inciName: String
-    var commonName: String
-    var role: String
-    var note: String?
+    var inciName: String       // Scientific INCI name
+    var commonName: String     // Common name shown to users
+    var role: String           // Function (e.g., "hydrator", "exfoliant")
+    var note: String?          // Safety or usage notes
 
     private enum CodingKeys: String, CodingKey { case inciName, commonName, role, note }
 
@@ -56,16 +67,17 @@ struct Ingredient: Identifiable, Codable, Hashable {
         self.commonName = try c.decode(String.self, forKey: .commonName)
         self.role = try c.decode(String.self, forKey: .role)
         self.note = try c.decodeIfPresent(String.self, forKey: .note)
-        self.id = UUID() // synthesize
+        self.id = UUID() // new ID each decode to avoid collisions
     }
 }
 
+/// A skincare product in the catalog
 struct Product: Identifiable, Codable, Hashable {
     var id: UUID = UUID()
     var name: String
     var brand: String
     var category: String
-    var assetName: String            // assets-only image name
+    var assetName: String            // local asset name for product image
     var concerns: [Concern]
     var ingredients: [Ingredient]
     var barcode: String
@@ -97,7 +109,7 @@ struct Product: Identifiable, Codable, Hashable {
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        self.id          = try c.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()   //keep existing ID if present
+        self.id          = try c.decodeIfPresent(UUID.self, forKey: .id) ?? UUID() // preserve or regenerate ID
         self.name        = try c.decode(String.self, forKey: .name)
         self.brand       = try c.decode(String.self, forKey: .brand)
         self.category    = try c.decode(String.self, forKey: .category)
@@ -110,7 +122,7 @@ struct Product: Identifiable, Codable, Hashable {
 
     func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
-        try c.encode(id, forKey: .id)                        // persist the UUID
+        try c.encode(id, forKey: .id)
         try c.encode(name, forKey: .name)
         try c.encode(brand, forKey: .brand)
         try c.encode(category, forKey: .category)
@@ -121,22 +133,26 @@ struct Product: Identifiable, Codable, Hashable {
         try c.encodeIfPresent(rating, forKey: .rating)
     }
 }
+
 // MARK: - Routines
 
+/// A slot within a skincare routine (e.g., "Cleanser", "Moisturiser")
 struct RoutineSlot: Identifiable, Codable, Hashable {
     var id: UUID = UUID()
     var step: String
-    var productID: UUID?
+    var productID: UUID?   // optional link to a Product
 }
 
+/// A skincare routine (AM or PM) containing multiple slots
 struct Routine: Identifiable, Codable, Hashable {
     var id: UUID = UUID()
-    var title: String   // "AM" or "PM"
+    var title: String       // "AM" or "PM"
     var slots: [RoutineSlot]
 }
 
 // MARK: - Face Scan
 
+/// Stores results of a face scan
 struct FaceScanResult: Identifiable, Codable, Hashable {
     var id: UUID = UUID()
     var timestamp: Date
@@ -146,19 +162,26 @@ struct FaceScanResult: Identifiable, Codable, Hashable {
 
 // MARK: - Notifications
 
+/// User’s reminder preferences
 struct NotificationPrefs: Codable, Equatable {
-    var enableAM: Bool; var amHour: Int; var amMinute: Int
-    var enablePM: Bool; var pmHour: Int; var pmMinute: Int
+    var enableAM: Bool
+    var amHour: Int
+    var amMinute: Int
+    var enablePM: Bool
+    var pmHour: Int
+    var pmMinute: Int
 }
 
-// MARK: - Day Log
+// MARK: - Daily Log
 
+/// Daily log of completed routine slots
 struct DayLog: Identifiable, Codable, Hashable {
     var id: UUID = UUID()
-    var dateKey: String
+    var dateKey: String        // "yyyy-MM-dd"
     var completedSlotIDs: [UUID]
 }
 
+/// Helper to format a Date as a skinsync log key
 extension Date {
     var skinsyncDateKey: String {
         let f = DateFormatter()

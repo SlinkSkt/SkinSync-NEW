@@ -1,18 +1,16 @@
-// Core/SkinSyncApp.swift
-// Assessment 1 Prototype — Part 2 (SwiftUI)
-// SwiftUI only (no Storyboards). Uses MVVM + simple file persistence.
-
-// Core/SkinSyncApp.swift
-// SkinSync — SwiftUI only, no Storyboards
+/// The main entry point for the SkinSync app.  
+/// Sets up the app's environment and initializes data storage.
 
 import SwiftUI
 
 @main
 struct SkinSyncApp: App {
+    @StateObject private var appModel = AppModel()
+    
     init() {
-        FileDataStore().seedIfNeeded()   // seeds JSON into Documents if missing
+        FileDataStore().seedIfNeeded()   // Seed JSON data into Documents folder if missing
     }
     var body: some Scene {
-        WindowGroup { RootView().environmentObject(AppModel()) }
+        WindowGroup { RootView().environmentObject(appModel) }
     }
 }

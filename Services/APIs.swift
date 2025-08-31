@@ -6,6 +6,10 @@
 //
 
 // Services/APIs.swift
+// !!!!!!!!!! ---- STILL UNDER DEVELOPMENT, PLEASE EXCLUDE THIS FROM THE ASSESSMENT 1  --- !!!!!!!!!!
+// !!!!!!!!!! ---- STILL UNDER DEVELOPMENT, PLEASE EXCLUDE THIS FROM THE ASSESSMENT 1  --- !!!!!!!!!!
+// !!!!!!!!!! ---- STILL UNDER DEVELOPMENT, PLEASE EXCLUDE THIS FROM THE ASSESSMENT 1  --- !!!!!!!!!!
+// !!!!!!!!!! ---- STILL UNDER DEVELOPMENT, PLEASE EXCLUDE THIS FROM THE ASSESSMENT 1  --- !!!!!!!!!!
 import Foundation
 import UIKit
 

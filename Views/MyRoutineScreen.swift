@@ -1,9 +1,11 @@
 import SwiftUI
 
+/// Displays a  week strip, AM/PM routine cards, and a link to reminder settings.
+/// Uses the shared `RoutineViewModel` injected from `RootView` so assignments made from
+/// the Products tab appear here instantly.
 struct MyRoutineScreen: View {
     // Uses the same RoutineViewModel the app injects in RootView
     @EnvironmentObject private var vm: RoutineViewModel
-    @EnvironmentObject private var app: AppModel
     let theme: AppTheme
 
     // Local date state for the week strip
@@ -22,6 +24,7 @@ struct MyRoutineScreen: View {
                         Spacer()
                         HStack(spacing: 12) {
                             Button { moveDay(-7) } label: { Image(systemName: "chevron.left") }
+                            Button { selectedDate = Date() } label: { Text("Today") }
                             Button { moveDay(+7) } label: { Image(systemName: "chevron.right") }
                         }
                         .buttonStyle(.plain)
@@ -53,6 +56,16 @@ struct MyRoutineScreen: View {
                 }
                 .padding(.horizontal)
 
+                // Empty state if there are no routines/slots at all
+                if vm.routines.flatMap({ $0.slots }).isEmpty {
+                    ContentStateView(
+                        icon: "calendar.badge.plus",
+                        title: "No routine yet",
+                        message: "Use the Products tab to add items to AM/PM steps."
+                    )
+                    .padding(.horizontal)
+                }
+
                 // Reminders subpage entry
                 NavigationLink {
                     RemindersSettingsView()
@@ -83,11 +96,12 @@ struct MyRoutineScreen: View {
             selectedDate = Date()
         }
         .navigationTitle("Routine")
+        .animation(.default, value: vm.routines) // animate card updates when assignments change
     }
 
-    // MARK: Helpers
+    // MARK: - Helpers
 
-    // Build step list for "AM" or "PM"
+    /// Build step list for a routine title ("AM" or "PM").
     private func steps(for title: String) -> [(slot: RoutineSlot, productName: String?)] {
         guard let routine = vm.routines.first(where: { $0.title.lowercased() == title.lowercased() }) else { return [] }
         return routine.slots.map { slot in
@@ -97,14 +111,16 @@ struct MyRoutineScreen: View {
     }
 
     private var amTimeString: String {
-        timeFormatter.string(from: dateFrom(hour: vm.notif.amHour, minute: vm.notif.amMinute))
+        Self.timeFormatter.string(from: dateFrom(hour: vm.notif.amHour, minute: vm.notif.amMinute))
     }
     private var pmTimeString: String {
-        timeFormatter.string(from: dateFrom(hour: vm.notif.pmHour, minute: vm.notif.pmMinute))
+        Self.timeFormatter.string(from: dateFrom(hour: vm.notif.pmHour, minute: vm.notif.pmMinute))
     }
-    private var timeFormatter: DateFormatter {
+
+    private static let timeFormatter: DateFormatter = {
         let df = DateFormatter(); df.timeStyle = .short; return df
-    }
+    }()
+
     private func dateFrom(hour: Int, minute: Int) -> Date {
         Calendar.current.date(from: DateComponents(hour: hour, minute: minute)) ?? Date()
     }
@@ -165,6 +181,14 @@ private struct RoutineCardMR_NoTicks: View {
                 Image(systemName: "arrow.clockwise").foregroundStyle(.secondary)
             }
             Text(time).foregroundStyle(.secondary)
+
+            if steps.isEmpty {
+                Text("No steps configured yet")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 4)
+            }
+
             ForEach(steps, id: \.slot.id) { pair in
                 HStack(spacing: 12) {
                     Image(systemName: "circle.fill")

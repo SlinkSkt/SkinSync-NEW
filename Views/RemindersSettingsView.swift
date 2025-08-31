@@ -6,7 +6,7 @@
 //
 import SwiftUI
 
-/// Dedicated reminders settings screen for AM / PM routine notifications.
+/// reminders settings screen for AM / PM routine notifications.
 /// Uses the same RoutineViewModel injected at the app level.
 struct RemindersSettingsView: View {
     @EnvironmentObject private var vm: RoutineViewModel

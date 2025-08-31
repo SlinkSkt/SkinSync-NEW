@@ -5,17 +5,47 @@ import SwiftUI
 struct RootView: View {
     @EnvironmentObject private var app: AppModel
 
-    @StateObject private var homeVM = HomeViewModel(store: FileDataStore())
-    @StateObject private var scanVM = ScanViewModel(productAPI: LocalProductAPI(),
-                                                    faceAPI: MockFaceScanService(),
-                                                    store: FileDataStore())
-    @StateObject private var routineVM = RoutineViewModel(store: FileDataStore(),
-                                                          scheduler: LocalNotificationScheduler())
-    @StateObject private var productsVM = ProductsViewModel(store: FileDataStore())
-    @StateObject private var profileVM = ProfileViewModel(store: FileDataStore())
+    // Shared dependencies so every view model uses the same store/services
+    private let store: FileDataStore
+    private let notif: NotificationScheduler
+    private let productAPI: ProductAPI
+    private let faceAPI: FaceScanService
+
+    @StateObject private var homeVM: HomeViewModel
+    @StateObject private var scanVM: ScanViewModel
+    @StateObject private var routineVM: RoutineViewModel
+    @StateObject private var productsVM: ProductsViewModel
+    @StateObject private var profileVM: ProfileViewModel
+
+    init() {
+        let ds = FileDataStore()
+        ds.seedIfNeeded() // copy bundled JSON to Documents on first run
+
+        // Create services as locals first (so the app don't read stored properties before init finishes)
+        let notifSvc = LocalNotificationScheduler()
+        let productSvc = LocalProductAPI()
+        let faceSvc = MockFaceScanService()
+
+        // Assign to stored properties
+        self.store = ds
+        self.notif = notifSvc
+        self.productAPI = productSvc
+        self.faceAPI = faceSvc
+
+        // safe to build StateObjects using the local services
+        _homeVM = StateObject(wrappedValue: HomeViewModel(store: ds))
+        _scanVM = StateObject(wrappedValue: ScanViewModel(productAPI: productSvc,
+                                                          faceAPI: faceSvc,
+                                                          store: ds))
+        _routineVM = StateObject(wrappedValue: RoutineViewModel(store: ds,
+                                                                scheduler: notifSvc))
+        _productsVM = StateObject(wrappedValue: ProductsViewModel(store: ds))
+        _profileVM = StateObject(wrappedValue: ProfileViewModel(store: ds))
+    }
+
+    private var theme: AppTheme { AppTheme(config: app.config) }
 
     var body: some View {
-        let theme = AppTheme(config: app.config)
         TabView {
             // Home
             NavigationStack {
@@ -122,6 +152,7 @@ struct HomeView: View {
             .padding()
         }
         .onAppear { vm.load() }
+        .refreshable { vm.load() }
     }
 }
 
@@ -298,28 +329,5 @@ struct ContentStateView: View {
             Text(message).foregroundStyle(.secondary).multilineTextAlignment(.center)
         }
         .padding()
-    }
-}
-
-struct AsyncRemoteImage: View {
-    let url: URL?; var placeholderSystemName: String = "photo"
-    var body: some View {
-        ZStack {
-            if let url {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .empty: ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
-                    case .success(let image): image.resizable().scaledToFill()
-                    case .failure: Image(systemName: placeholderSystemName).resizable().scaledToFit().padding(12).foregroundStyle(.secondary)
-                    @unknown default: EmptyView()
-                    }
-                }
-            } else {
-                Image(systemName: placeholderSystemName).resizable().scaledToFit().padding(12).foregroundStyle(.secondary)
-            }
-        }
-        .background(Color(.tertiarySystemFill))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .accessibilityHidden(true)
     }
 }
