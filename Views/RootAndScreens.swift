@@ -5,17 +5,47 @@ import SwiftUI
 struct RootView: View {
     @EnvironmentObject private var app: AppModel
 
-    @StateObject private var homeVM = HomeViewModel(store: FileDataStore())
-    @StateObject private var scanVM = ScanViewModel(productAPI: LocalProductAPI(),
-                                                    faceAPI: MockFaceScanService(),
-                                                    store: FileDataStore())
-    @StateObject private var routineVM = RoutineViewModel(store: FileDataStore(),
-                                                          scheduler: LocalNotificationScheduler())
-    @StateObject private var productsVM = ProductsViewModel(store: FileDataStore())
-    @StateObject private var profileVM = ProfileViewModel(store: FileDataStore())
+    // Shared dependencies so every view model uses the same store/services
+    private let store: FileDataStore
+    private let notif: NotificationScheduler
+    private let productAPI: ProductAPI
+    private let faceAPI: FaceScanService
+
+    @StateObject private var homeVM: HomeViewModel
+    @StateObject private var scanVM: ScanViewModel
+    @StateObject private var routineVM: RoutineViewModel
+    @StateObject private var productsVM: ProductsViewModel
+    @StateObject private var profileVM: ProfileViewModel
+
+    init() {
+        let ds = FileDataStore()
+        ds.seedIfNeeded() // copy bundled JSON to Documents on first run
+
+        // Create services as locals first (so the app don't read stored properties before init finishes)
+        let notifSvc = LocalNotificationScheduler()
+        let productSvc = LocalProductAPI()
+        let faceSvc = MockFaceScanService()
+
+        // Assign to stored properties
+        self.store = ds
+        self.notif = notifSvc
+        self.productAPI = productSvc
+        self.faceAPI = faceSvc
+
+        // safe to build StateObjects using the local services
+        _homeVM = StateObject(wrappedValue: HomeViewModel(store: ds))
+        _scanVM = StateObject(wrappedValue: ScanViewModel(productAPI: productSvc,
+                                                          faceAPI: faceSvc,
+                                                          store: ds))
+        _routineVM = StateObject(wrappedValue: RoutineViewModel(store: ds,
+                                                                scheduler: notifSvc))
+        _productsVM = StateObject(wrappedValue: ProductsViewModel(store: ds))
+        _profileVM = StateObject(wrappedValue: ProfileViewModel(store: ds))
+    }
+
+    private var theme: AppTheme { AppTheme(config: app.config) }
 
     var body: some View {
-        let theme = AppTheme(config: app.config)
         TabView {
             // Home
             NavigationStack {
@@ -86,41 +116,136 @@ struct HomeView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            LazyVStack(spacing: AppTheme.Spacing.lg) {
+                // Welcome header
+                VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+                    Text("Welcome back!")
+                        .font(AppTheme.Typography.largeTitle)
+                        .foregroundStyle(.primary)
+                    
+                    Text("Discover your skincare routine")
+                        .font(AppTheme.Typography.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, AppTheme.Spacing.md)
+                
                 if let scan = vm.latestScan {
-                    GroupBox("Latest Face Scan") {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(scan.timestamp.formatted(date: .abbreviated, time: .shortened))
-                                .foregroundStyle(.secondary)
+                    VStack(alignment: .leading, spacing: AppTheme.Spacing.md) {
+                        Label("Latest Face Scan", systemImage: "face.smiling")
+                            .font(AppTheme.Typography.headline)
+                            .foregroundStyle(.primary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        
+                        VStack(alignment: .leading, spacing: AppTheme.Spacing.md) {
                             HStack {
-                                ForEach(scan.concerns) { c in
-                                    Text(c.title).font(.caption)
-                                        .padding(.horizontal, 8).padding(.vertical, 4)
-                                        .background(theme.primary.opacity(0.15))
-                                        .foregroundStyle(theme.primary)
-                                        .clipShape(Capsule())
+                                Image(systemName: "calendar")
+                                    .foregroundStyle(.secondary)
+                                Text(scan.timestamp.formatted(date: .abbreviated, time: .shortened))
+                                    .font(AppTheme.Typography.body)
+                                    .foregroundStyle(.secondary)
+                                Spacer()
+                            }
+                            
+                            if !scan.concerns.isEmpty {
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: AppTheme.Spacing.sm) {
+                                        ForEach(scan.concerns) { concern in
+                                            Text(concern.title)
+                                                .font(AppTheme.Typography.caption)
+                                                .padding(.horizontal, AppTheme.Spacing.md)
+                                                .padding(.vertical, AppTheme.Spacing.sm)
+                                                .background(theme.primary.opacity(0.15))
+                                                .foregroundStyle(theme.primary)
+                                                .clipShape(Capsule())
+                                        }
+                                    }
+                                    .padding(.horizontal, 1) // Allows shadow to show
                                 }
                             }
-                            if let n = scan.notes, !n.isEmpty {
-                                Text(n).font(.footnote).foregroundStyle(.secondary)
+                            
+                            if let notes = scan.notes, !notes.isEmpty {
+                                Text(notes)
+                                    .font(AppTheme.Typography.body)
+                                    .foregroundStyle(.secondary)
+                                    .padding(.top, AppTheme.Spacing.xs)
                             }
                         }
+                        .padding(AppTheme.Spacing.lg)
+                        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: AppTheme.cardCornerRadius))
+                        .shadow(color: theme.cardShadow, radius: 4, x: 0, y: 2)
                     }
+                    .padding(.horizontal, AppTheme.Spacing.md)
                 } else {
-                    ContentStateView(icon: "face.smiling",
-                                     title: "No face scans yet",
-                                     message: "Go to Scan → Face to analyze your skin.")
+                    VStack(spacing: AppTheme.Spacing.lg) {
+                        ContentStateView(
+                            icon: "face.smiling",
+                            title: "No face scans yet",
+                            message: "Go to Scan → Face to analyze your skin and get personalized recommendations."
+                        )
+                        .padding(.horizontal, AppTheme.Spacing.md)
+                        
+                        Button(action: {}) {
+                            Label("Take Face Scan", systemImage: "camera.viewfinder")
+                                .font(AppTheme.Typography.headline)
+                                .foregroundStyle(.white)
+                                .padding(.vertical, AppTheme.Spacing.md)
+                                .padding(.horizontal, AppTheme.Spacing.xl)
+                                .background(theme.primary, in: RoundedRectangle(cornerRadius: AppTheme.smallCornerRadius))
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
 
                 if !vm.recommendations.isEmpty {
-                    Text("Recommended for you").font(.title2.bold())
-                    ForEach(vm.recommendations) { p in
-                        NavigationLink(value: p) { ProductRow(product: p, theme: theme) }
+                    VStack(alignment: .leading, spacing: AppTheme.Spacing.md) {
+                        HStack {
+                            Label("Recommended for you", systemImage: "sparkles")
+                                .font(AppTheme.Typography.title)
+                                .foregroundStyle(.primary)
+                            Spacer()
+                        }
+                        .padding(.horizontal, AppTheme.Spacing.md)
+                        
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            LazyHStack(spacing: AppTheme.Spacing.md) {
+                                ForEach(vm.recommendations) { product in
+                                    NavigationLink(value: product) {
+                                        VStack(spacing: AppTheme.Spacing.md) {
+                                            Image(product.assetName)
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: 140, height: 140)
+                                                .clipShape(RoundedRectangle(cornerRadius: AppTheme.mediumCornerRadius))
+                                            
+                                            VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
+                                                Text(product.name)
+                                                    .font(AppTheme.Typography.headline)
+                                                    .foregroundStyle(.primary)
+                                                    .lineLimit(2)
+                                                    .multilineTextAlignment(.leading)
+                                                
+                                                Text(product.brand)
+                                                    .font(AppTheme.Typography.caption)
+                                                    .foregroundStyle(.secondary)
+                                                    .lineLimit(1)
+                                            }
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                        }
+                                        .frame(width: 140)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .padding(.horizontal, 1)
+                                }
+                            }
+                            .padding(.horizontal, AppTheme.Spacing.md)
+                        }
                     }
                 }
             }
-            .padding()
+            .padding(.top, AppTheme.Spacing.md)
         }
+        .refreshable { vm.load() }
         .onAppear { vm.load() }
     }
 }
@@ -272,54 +397,84 @@ struct ProductRow: View {
     let theme: AppTheme
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: AppTheme.Spacing.md) {
             Image(product.assetName)
                 .resizable()
                 .scaledToFill()
-                .frame(width: 64, height: 64)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .frame(width: 72, height: 72)
+                .clipShape(RoundedRectangle(cornerRadius: AppTheme.mediumCornerRadius))
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(product.name).font(.headline)
-                Text(product.brand).font(.subheadline).foregroundStyle(.secondary)
-                IngredientCloud(ingredients: product.ingredients).tint(theme.primary)
+            VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
+                Text(product.name)
+                    .font(AppTheme.Typography.headline)
+                    .lineLimit(2)
+                
+                Text(product.brand)
+                    .font(AppTheme.Typography.subheadline)
+                    .foregroundStyle(theme.textSecondary)
+                    .lineLimit(1)
+                
+                if !product.ingredients.isEmpty {
+                    IngredientCloud(ingredients: Array(product.ingredients.prefix(2)))
+                        .tint(theme.primary)
+                        .padding(.top, AppTheme.Spacing.xs)
+                }
+            }
+            
+            Spacer()
+            
+            VStack(alignment: .trailing, spacing: AppTheme.Spacing.xs) {
+                if let rating = product.rating {
+                    HStack(spacing: AppTheme.Spacing.xs) {
+                        Image(systemName: "star.fill")
+                            .foregroundStyle(.yellow)
+                            .font(.caption2)
+                        Text(String(format: "%.1f", rating))
+                            .font(AppTheme.Typography.caption2)
+                            .foregroundStyle(theme.textSecondary)
+                    }
+                }
+                
+                // Category badge
+                Text(product.category)
+                    .font(AppTheme.Typography.caption)
+                    .padding(.horizontal, AppTheme.Spacing.sm)
+                    .padding(.vertical, AppTheme.Spacing.xs)
+                    .background(theme.primary.opacity(0.1))
+                    .foregroundStyle(theme.primary)
+                    .clipShape(Capsule())
             }
         }
-        .padding(.vertical, 6)
+        .padding(.vertical, AppTheme.Spacing.sm)
     }
 }
 
 struct ContentStateView: View {
-    let icon: String; let title: String; let message: String
+    let icon: String
+    let title: String
+    let message: String
+    
     var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: icon).font(.system(size: 40))
-            Text(title).font(.title3.weight(.semibold))
-            Text(message).foregroundStyle(.secondary).multilineTextAlignment(.center)
+        VStack(spacing: AppTheme.Spacing.md) {
+            Image(systemName: icon)
+                .font(.system(size: 56, weight: .light))
+                .foregroundStyle(Color(.quaternaryLabel))
+                .symbolRenderingMode(.hierarchical)
+            
+            Text(title)
+                .font(AppTheme.Typography.title)
+                .foregroundStyle(.primary)
+                .multilineTextAlignment(.center)
+            
+            Text(message)
+                .font(AppTheme.Typography.body)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .lineLimit(nil)
         }
-        .padding()
-    }
-}
-
-struct AsyncRemoteImage: View {
-    let url: URL?; var placeholderSystemName: String = "photo"
-    var body: some View {
-        ZStack {
-            if let url {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .empty: ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
-                    case .success(let image): image.resizable().scaledToFill()
-                    case .failure: Image(systemName: placeholderSystemName).resizable().scaledToFit().padding(12).foregroundStyle(.secondary)
-                    @unknown default: EmptyView()
-                    }
-                }
-            } else {
-                Image(systemName: placeholderSystemName).resizable().scaledToFit().padding(12).foregroundStyle(.secondary)
-            }
-        }
-        .background(Color(.tertiarySystemFill))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .accessibilityHidden(true)
+        .padding(AppTheme.Spacing.xl)
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title). \(message)")
     }
 }

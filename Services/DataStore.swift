@@ -1,3 +1,8 @@
+// https://developer.apple.com/documentation/swiftdata/datastore
+// https://docs.swift.org/swift-book/documentation/the-swift-programming-language/generics/ - Zhen Xiao 20/8/2025
+// https://developer.apple.com/documentation/foundation/jsondecoder
+// !!!!!!!!!! FACE SCAN ---- STILL UNDER DEVELOPMENT, PLEASE EXCLUDE THIS FROM THE ASSESSMENT 1  --- !!!!!!!!!!
+// To help VM with data store, They only talk to protocol. datastore define a storage layer of the app - NOTE __ZHEN XIAO
 import Foundation
 
 // MARK: - DataStore protocol
@@ -50,6 +55,12 @@ final class FileDataStore: DataStore {
 
     private let fm = FileManager.default
 
+    // Debug-only logging helper (won't spam Release builds)
+    private func debugLog(_ message: String) {
+        #if DEBUG
+        print(message)
+        #endif
+    }
    
     // MARK: Public seeding (optional)
     /// Call once on launch to ensure sample JSON exists in Documents.
@@ -62,14 +73,14 @@ final class FileDataStore: DataStore {
             if !fm.fileExists(atPath: prodURL.path) {
                 if let src = bundledURL(FileName.products.rawValue) {
                     try fm.copyItem(at: src, to: prodURL)
-                    print("Seeded products.json from bundle")
+                    debugLog("Seeded products.json from bundle")
                 } else {
                     // If no bundle file, create empty array
                     try save(products: [])
-                    print("Created empty products.json")
+                    debugLog("Created empty products.json")
                 }
             }
-        } catch { print("Products seed error: \(error)") }
+        } catch { debugLog("Products seed error: \(error)") }
 
         // Seed routines
         do {
@@ -77,7 +88,7 @@ final class FileDataStore: DataStore {
             if !fm.fileExists(atPath: routinesURL.path) {
                 if let src = bundledURL(FileName.routines.rawValue) {
                     try fm.copyItem(at: src, to: routinesURL)
-                    print("Seeded routines.json from bundle")
+                    debugLog("Seeded routines.json from bundle")
                 } else {
                     // Create sensible defaults if nothing bundled
                     let defaultRoutines = [
@@ -100,10 +111,10 @@ final class FileDataStore: DataStore {
                         )
                     ]
                     try save(routines: defaultRoutines)
-                    print("Created default routines.json")
+                    debugLog("Created default routines.json")
                 }
             }
-        } catch { print("Routines seed error: \(error)") }
+        } catch { debugLog("Routines seed error: \(error)") }
 
         // Other JSON files (scans, profile, notif, daylogs)
         for name in [FileName.scans, .profile, .notif, .daylogs] {
@@ -112,12 +123,25 @@ final class FileDataStore: DataStore {
                 guard !fm.fileExists(atPath: dst.path) else { continue }
                 if let src = bundledURL(name.rawValue) {
                     try fm.copyItem(at: src, to: dst)
-                    print("Seeded \(name.rawValue) from bundle")
+                    debugLog("Seeded \(name.rawValue) from bundle")
                 }
             } catch {
-                print("Seed error \(name.rawValue): \(error)")
+                debugLog("Seed error \(name.rawValue): \(error)")
             }
         }
+        // Seed favourites (create empty file if none exists in bundle)
+        do {
+            let favURL = try docURL(FileName.favorites.rawValue)
+            if !fm.fileExists(atPath: favURL.path) {
+                if let src = bundledURL(FileName.favorites.rawValue) {
+                    try fm.copyItem(at: src, to: favURL)
+                    debugLog("Seeded favorites.json from bundle")
+                } else {
+                    try save(favoriteIDs: [])
+                    debugLog("Created empty favorites.json")
+                }
+            }
+        } catch { debugLog("Favourites seed error: \(error)") }
     }
 
     // MARK: - DataStore conformance
