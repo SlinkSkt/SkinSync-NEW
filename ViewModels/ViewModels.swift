@@ -31,7 +31,7 @@ final class ProfileViewModel: ObservableObject {
     init(store: DataStore) {
         self.store = store
         self.profile = (try? store.loadProfile()) ?? Profile(nickname: "Guest", yearOfBirthRange: "2001-2005",
-                                                             skinType: .combination, allergies: [], goals: [.hydrate])
+                                                             skinType: .combination, allergies: [], goals: [.hydrate], profileIcon: "person.crop.circle.fill")
     }
     func save() { try? store.save(profile: profile) }
 }

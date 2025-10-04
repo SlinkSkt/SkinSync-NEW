@@ -10,6 +10,7 @@ struct RootView: View {
     private let notif: NotificationScheduler
     private let productAPI: ProductAPI
     private let faceAPI: FaceScanService
+    private let uvService: UVIndexService
 
     @StateObject private var homeVM: HomeViewModel
     @StateObject private var scanVM: ScanViewModel
@@ -25,12 +26,14 @@ struct RootView: View {
         let notifSvc = LocalNotificationScheduler()
         let productSvc = LocalProductAPI()
         let faceSvc = MockFaceScanService()
+        let uvSvc = OpenUVService(apiKey: "openuv-2sy4amrmgcdf6jo-io")
 
         // Assign to stored properties
         self.store = ds
         self.notif = notifSvc
         self.productAPI = productSvc
         self.faceAPI = faceSvc
+        self.uvService = uvSvc
 
         // safe to build StateObjects using the local services
         _homeVM = StateObject(wrappedValue: HomeViewModel(store: ds))
@@ -49,9 +52,9 @@ struct RootView: View {
         TabView {
             // Home
             NavigationStack {
-                HomeView(theme: theme)
+                HomeView(theme: theme, uvService: uvService)
                     .environmentObject(homeVM)
-                    .navigationTitle("Home")
+                    .environmentObject(profileVM)
                     .navigationDestination(for: Product.self) { p in
                         ProductDetailView(product: p, theme: theme)
                     }
@@ -91,13 +94,6 @@ struct RootView: View {
             .environmentObject(routineVM)
             .tabItem { Label("Products", systemImage: "books.vertical") }
 
-            // Profile
-            NavigationStack {
-                ProfileScreen(theme: theme)
-                    .environmentObject(profileVM)
-                    .navigationTitle("Profile")
-            }
-            .tabItem { Label("Profile", systemImage: "person.crop.circle") }
         }
         .tint(theme.primary)
         .onAppear {
@@ -112,23 +108,46 @@ struct RootView: View {
 // MARK: - Home (latest face scan + recommendations)
 struct HomeView: View {
     @EnvironmentObject private var vm: HomeViewModel
+    @EnvironmentObject private var profileVM: ProfileViewModel
     let theme: AppTheme
+    let uvService: UVIndexService
+    @State private var showingProfile = false
 
     var body: some View {
         ScrollView {
             LazyVStack(spacing: AppTheme.Spacing.lg) {
-                // Welcome header
-                VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
-                    Text("Welcome back!")
-                        .font(AppTheme.Typography.largeTitle)
-                        .foregroundStyle(.primary)
+                // Welcome header with profile button
+                HStack(alignment: .top, spacing: AppTheme.Spacing.md) {
+                    Button {
+                        showingProfile = true
+                    } label: {
+                        Image(systemName: profileVM.profile.profileIcon)
+                            .font(.title)
+                            .foregroundStyle(theme.primary)
+                            .frame(width: 50, height: 50)
+                            .background(.ultraThinMaterial, in: Circle())
+                            .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+                    }
+                    .accessibilityLabel("Open Profile")
                     
-                    Text("Discover your skincare routine")
-                        .font(AppTheme.Typography.subheadline)
-                        .foregroundStyle(.secondary)
+                    VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
+                        Text("Welcome back!")
+                            .font(AppTheme.Typography.title)
+                            .foregroundStyle(.primary)
+                        
+                        Text("Discover your skincare routine")
+                            .font(AppTheme.Typography.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    
+                    Spacer()
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, AppTheme.Spacing.md)
+                .padding(.top, AppTheme.Spacing.sm)
+                
+                // UV Index Component
+                UVIndexView(theme: theme, uvService: uvService)
+                    .padding(.horizontal, AppTheme.Spacing.md)
                 
                 if let scan = vm.latestScan {
                     VStack(alignment: .leading, spacing: AppTheme.Spacing.md) {
@@ -247,6 +266,10 @@ struct HomeView: View {
         }
         .refreshable { vm.load() }
         .onAppear { vm.load() }
+        .sheet(isPresented: $showingProfile) {
+            ProfileView(theme: theme)
+                .environmentObject(profileVM)
+        }
     }
 }
 
@@ -324,68 +347,6 @@ struct ScanScreen: View {
                 }
             }
             Spacer()
-        }
-    }
-}
-
-// MARK: - Profile
-struct ProfileScreen: View {
-    @EnvironmentObject private var vm: ProfileViewModel
-    let theme: AppTheme
-    @State private var newAllergy: String = ""
-
-    var body: some View {
-        Form {
-            Section("User") {
-                TextField("Nickname", text: Binding(
-                    get: { vm.profile.nickname }, set: { vm.profile.nickname = $0; vm.save() }))
-                TextField("Year of birth range (e.g., 2001-2005)", text: Binding(
-                    get: { vm.profile.yearOfBirthRange }, set: { vm.profile.yearOfBirthRange = $0; vm.save() }))
-            }
-            Section("Skin") {
-                Picker("Skin type", selection: Binding(
-                    get: { vm.profile.skinType }, set: { vm.profile.skinType = $0; vm.save() })) {
-                    ForEach(SkinType.allCases) { t in Text(t.rawValue.capitalized).tag(t) }
-                }
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Allergies")
-                    HStack {
-                        TextField("Add allergy", text: $newAllergy)
-                        Button("Add") {
-                            let a = newAllergy.trimmingCharacters(in: .whitespaces)
-                            guard !a.isEmpty else { return }
-                            vm.profile.allergies.append(a); newAllergy = ""; vm.save()
-                        }
-                    }
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack {
-                            ForEach(Array(vm.profile.allergies.enumerated()), id: \.offset) { idx, a in
-                                HStack(spacing: 6) {
-                                    Text(a).font(.caption)
-                                    Button {
-                                        vm.profile.allergies.remove(at: idx); vm.save()
-                                    } label: { Image(systemName: "xmark.circle.fill") }
-                                }
-                                .padding(.horizontal, 8).padding(.vertical, 4)
-                                .background(theme.primary.opacity(0.15))
-                                .clipShape(Capsule())
-                            }
-                        }
-                    }
-                }
-                Section("Goals") {
-                    ForEach(SkinGoal.allCases) { g in
-                        Toggle(g.rawValue, isOn: Binding(
-                            get: { vm.profile.goals.contains(g) },
-                            set: { isOn in
-                                if isOn { vm.profile.goals.append(g) }
-                                else { vm.profile.goals.removeAll { $0 == g } }
-                                vm.save()
-                            }
-                        ))
-                    }
-                }
-            }
         }
     }
 }

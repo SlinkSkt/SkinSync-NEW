@@ -4,5 +4,7 @@
 <dict>
 	<key>Privacy - Local notifications Usage Description</key>
 	<string>SkinSync uses notifications to remind you about your skincare routine.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>SkinSync uses your location to provide current UV index information for better skincare recommendations.</string>
 </dict>
 </plist>

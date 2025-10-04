@@ -26,6 +26,7 @@ struct Services {
     let notif: NotificationScheduler
     let faceScan: FaceScanService
     let productAPI: ProductAPI
+    let uvService: UVIndexService
 
     /// The production set of services used by the running app.
     static let live = Services(
@@ -33,7 +34,8 @@ struct Services {
         imageLoader: DefaultImageLoader(),
         notif: LocalNotificationScheduler(),
         faceScan: MockFaceScanService(),   // This is still under dev, so replace with a real impl when ready
-        productAPI: LocalProductAPI()      // This is still under dev, so replace with a real impl when ready
+        productAPI: LocalProductAPI(),     // This is still under dev, so replace with a real impl when ready
+        uvService: OpenUVService(apiKey: "openuv-2sy4amrmgcdf6jo-io")  // Real OpenUV API
     )
 }
 

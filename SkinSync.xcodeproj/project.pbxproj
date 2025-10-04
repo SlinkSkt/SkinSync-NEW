@@ -29,6 +29,10 @@
 		FF935B772E63481200D412DD /* ProductDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF935B762E63480200D412DD /* ProductDetailView.swift */; };
 		FF935B7B2E63565900D412DD /* FavoritesScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF935B7A2E63564A00D412DD /* FavoritesScreen.swift */; };
 		FF935B7D2E6366C700D412DD /* RemindersSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF935B7C2E6366BE00D412DD /* RemindersSettingsView.swift */; };
+		FFE900F22E915D0E00DDC574 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFE900F12E915D0E00DDC574 /* ProfileView.swift */; };
+		FFE900F42E91656C00DDC574 /* UVIndexService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFE900F32E91656C00DDC574 /* UVIndexService.swift */; };
+		FFE900F62E91658300DDC574 /* UVIndexViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFE900F52E91658300DDC574 /* UVIndexViewModel.swift */; };
+		FFE900F82E91659000DDC574 /* UVIndexView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFE900F72E91659000DDC574 /* UVIndexView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -55,6 +59,10 @@
 		FF935B762E63480200D412DD /* ProductDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductDetailView.swift; sourceTree = "<group>"; };
 		FF935B7A2E63564A00D412DD /* FavoritesScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesScreen.swift; sourceTree = "<group>"; };
 		FF935B7C2E6366BE00D412DD /* RemindersSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersSettingsView.swift; sourceTree = "<group>"; };
+		FFE900F12E915D0E00DDC574 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		FFE900F32E91656C00DDC574 /* UVIndexService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UVIndexService.swift; sourceTree = "<group>"; };
+		FFE900F52E91658300DDC574 /* UVIndexViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UVIndexViewModel.swift; sourceTree = "<group>"; };
+		FFE900F72E91659000DDC574 /* UVIndexView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UVIndexView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -141,6 +149,7 @@
 		FF935AFC2E62056200D412DD /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				FFE900F32E91656C00DDC574 /* UVIndexService.swift */,
 				FF935B112E620D5400D412DD /* Camera.swift */,
 				FF935B0F2E620D4100D412DD /* APIs.swift */,
 				FF935B0D2E620D1A00D412DD /* NotificationScheduler.swift */,
@@ -161,6 +170,7 @@
 		FF935B002E62056200D412DD /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				FFE900F52E91658300DDC574 /* UVIndexViewModel.swift */,
 				FF935B372E62D37A00D412DD /* ScanViewModel.swift */,
 				FF935B352E62D36B00D412DD /* ProfileViewModel.swift */,
 				FF935B332E62D35900D412DD /* HomeViewModel.swift */,
@@ -173,6 +183,8 @@
 		FF935B022E62056200D412DD /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				FFE900F72E91659000DDC574 /* UVIndexView.swift */,
+				FFE900F12E915D0E00DDC574 /* ProfileView.swift */,
 				FF935B7C2E6366BE00D412DD /* RemindersSettingsView.swift */,
 				FF935B7A2E63564A00D412DD /* FavoritesScreen.swift */,
 				FF935B762E63480200D412DD /* ProductDetailView.swift */,
@@ -260,7 +272,9 @@
 			files = (
 				FF935B342E62D36000D412DD /* HomeViewModel.swift in Sources */,
 				FF935B042E62056200D412DD /* SkinSyncApp.swift in Sources */,
+				FFE900F82E91659000DDC574 /* UVIndexView.swift in Sources */,
 				FF935B052E62056200D412DD /* DataStore.swift in Sources */,
+				FFE900F42E91656C00DDC574 /* UVIndexService.swift in Sources */,
 				FF935B302E62C51300D412DD /* ProductsViewModel.swift in Sources */,
 				FF935B7B2E63565900D412DD /* FavoritesScreen.swift in Sources */,
 				FF935B322E62D34A00D412DD /* RoutineViewModel.swift in Sources */,
@@ -270,10 +284,12 @@
 				FF935B072E62056200D412DD /* AppModel.swift in Sources */,
 				FF935B102E620D4700D412DD /* APIs.swift in Sources */,
 				FF935B092E62056200D412DD /* Theme.swift in Sources */,
+				FFE900F62E91658300DDC574 /* UVIndexViewModel.swift in Sources */,
 				FF935B182E62191600D412DD /* MyRoutineScreen.swift in Sources */,
 				FF935B2E2E62C4E200D412DD /* ProductsScreen.swift in Sources */,
 				FF935B7D2E6366C700D412DD /* RemindersSettingsView.swift in Sources */,
 				FF935B362E62D37100D412DD /* ProfileViewModel.swift in Sources */,
+				FFE900F22E915D0E00DDC574 /* ProfileView.swift in Sources */,
 				FF935B382E62D38000D412DD /* ScanViewModel.swift in Sources */,
 				FF935B122E620D5D00D412DD /* Camera.swift in Sources */,
 				FF935B0A2E62056200D412DD /* IngredientCloudLayout.swift in Sources */,

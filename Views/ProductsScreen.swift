@@ -16,7 +16,7 @@ struct ProductsScreen: View {
         var iconName: String {
             switch self {
             case .brand: return "textformat.abc"
-            case .name: return "text.abc"
+            case .name: return "textformat"
             case .category: return "folder"
             }
         }

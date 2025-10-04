@@ -40,6 +40,7 @@ struct Profile: Codable, Equatable {
     var skinType: SkinType
     var allergies: [String]
     var goals: [SkinGoal]
+    var profileIcon: String
 }
 
 // MARK: - Products

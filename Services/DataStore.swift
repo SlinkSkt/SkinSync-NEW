@@ -176,7 +176,7 @@ final class FileDataStore: DataStore {
             return try decode(Profile.self, from: url)
         }
         // sensible empty default if nothing bundled
-        return Profile(nickname: "", yearOfBirthRange: "", skinType: .normal, allergies: [], goals: [])
+        return Profile(nickname: "", yearOfBirthRange: "", skinType: .normal, allergies: [], goals: [], profileIcon: "person.fill")
     }
     func save(profile: Profile) throws {
         try saveEncodable(profile, name: .profile)

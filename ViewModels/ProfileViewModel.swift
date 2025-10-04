@@ -18,10 +18,23 @@ final class ProfileViewModel: ObservableObject {
                    yearOfBirthRange: "",
                    skinType: .normal,
                    allergies: [],
-                   goals: [])
+                   goals: [],
+                   profileIcon: "person.fill")
     }
     
     func save() {
         do { try store.save(profile: profile) } catch { }
+    }
+    
+    func resetAllData() {
+        profile = Profile(
+            nickname: "",
+            yearOfBirthRange: "",
+            skinType: .normal,
+            allergies: [],
+            goals: [],
+            profileIcon: "person.fill"
+        )
+        save()
     }
 }
