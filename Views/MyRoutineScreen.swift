@@ -104,6 +104,16 @@ struct MyRoutineScreen: View {
                     .padding(.horizontal, AppTheme.Spacing.md)
                 }
 
+                // Empty state if there are no routines/slots at all
+                if vm.routines.flatMap({ $0.slots }).isEmpty {
+                    ContentStateView(
+                        icon: "calendar.badge.plus",
+                        title: "No routine yet",
+                        message: "Use the Products tab to add items to AM/PM steps."
+                    )
+                    .padding(.horizontal)
+                }
+
                 // Reminders subpage entry
                 NavigationLink {
                     RemindersSettingsView()
