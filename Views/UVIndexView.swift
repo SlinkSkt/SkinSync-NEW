@@ -158,6 +158,11 @@ struct UVIndexView: View {
             // Always try to get city name
             viewModel.requestLocationAndFetchCity()
         }
+        .onTapGesture {
+            // Allow tapping to retry UV data fetch
+            print("🔄 UV Index tapped - retrying...")
+            viewModel.requestLocationAndFetchUVIndex()
+        }
     }
     
     private var uvIndexColor: Color {

@@ -22,6 +22,12 @@ struct UVIndexResult: Codable {
     let ozone: Double
     let ozoneTime: String
     let safeExposureTime: SafeExposureTime?
+    let sunInfo: SunInfo?
+    
+    enum CodingKeys: String, CodingKey {
+        case uv, uvTime, uvMax, uvMaxTime, ozone, ozoneTime, safeExposureTime
+        case sunInfo = "sun_info"
+    }
 }
 
 struct SafeExposureTime: Codable {
@@ -31,6 +37,52 @@ struct SafeExposureTime: Codable {
     let st4: Int?
     let st5: Int?
     let st6: Int?
+}
+
+struct SunInfo: Codable {
+    let sunTimes: SunTimes?
+    let sunPosition: SunPosition?
+    
+    enum CodingKeys: String, CodingKey {
+        case sunTimes = "sun_times"
+        case sunPosition = "sun_position"
+    }
+}
+
+struct SunTimes: Codable {
+    let solarNoon: String?
+    let nadir: String?
+    let sunrise: String?
+    let sunset: String?
+    let sunriseEnd: String?
+    let sunsetStart: String?
+    let dawn: String?
+    let dusk: String?
+    let nauticalDawn: String?
+    let nauticalDusk: String?
+    let nightEnd: String?
+    let night: String?
+    let goldenHourEnd: String?
+    let goldenHour: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case solarNoon = "solarNoon"
+        case nadir, sunrise, sunset
+        case sunriseEnd = "sunriseEnd"
+        case sunsetStart = "sunsetStart"
+        case dawn, dusk
+        case nauticalDawn = "nauticalDawn"
+        case nauticalDusk = "nauticalDusk"
+        case nightEnd = "nightEnd"
+        case night
+        case goldenHourEnd = "goldenHourEnd"
+        case goldenHour = "goldenHour"
+    }
+}
+
+struct SunPosition: Codable {
+    let azimuth: Double?
+    let altitude: Double?
 }
 
 // MARK: - UV Index Service Protocol
@@ -52,23 +104,93 @@ final class OpenUVService: UVIndexService {
     
     func fetchUVIndex(for location: CLLocation) async throws -> UVIndexResult {
         let url = buildURL(for: location)
+        print("🌐 Fetching UV data from: \(url)")
+        print("🔑 Using API key: \(apiKey.prefix(10))...")
         
         var request = URLRequest(url: url)
         request.setValue(apiKey, forHTTPHeaderField: "x-access-token")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         
-        let (data, response) = try await session.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw UVIndexError.invalidResponse
+        do {
+            let (data, response) = try await session.data(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                print("❌ Invalid response type")
+                throw UVIndexError.invalidResponse
+            }
+            
+            print("📡 HTTP Status: \(httpResponse.statusCode)")
+            
+            guard httpResponse.statusCode == 200 else {
+                print("❌ API Error: \(httpResponse.statusCode)")
+                if let responseString = String(data: data, encoding: .utf8) {
+                    print("📄 Response body: \(responseString)")
+                }
+                throw UVIndexError.apiError(httpResponse.statusCode)
+            }
+            
+            // Check if response data is empty
+            guard !data.isEmpty else {
+                print("❌ Empty response data")
+                throw UVIndexError.invalidResponse
+            }
+            
+            // Log the raw response for debugging
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("📄 Raw response: \(responseString)")
+            }
+            
+            print("✅ Successfully received UV data")
+            
+            // Parse JSON manually to handle the complex structure
+            guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let result = json["result"] as? [String: Any] else {
+                throw UVIndexError.invalidResponse
+            }
+            
+            guard let uv = result["uv"] as? Double,
+                  let uvTime = result["uv_time"] as? String,
+                  let uvMax = result["uv_max"] as? Double,
+                  let uvMaxTime = result["uv_max_time"] as? String,
+                  let ozone = result["ozone"] as? Double,
+                  let ozoneTime = result["ozone_time"] as? String else {
+                throw UVIndexError.invalidResponse
+            }
+            
+            // Parse safe exposure time if available
+            var safeExposureTime: SafeExposureTime?
+            if let safeExposureData = result["safe_exposure_time"] as? [String: Any] {
+                safeExposureTime = SafeExposureTime(
+                    st1: safeExposureData["st1"] as? Int,
+                    st2: safeExposureData["st2"] as? Int,
+                    st3: safeExposureData["st3"] as? Int,
+                    st4: safeExposureData["st4"] as? Int,
+                    st5: safeExposureData["st5"] as? Int,
+                    st6: safeExposureData["st6"] as? Int
+                )
+            }
+            
+            let uvResult = UVIndexResult(
+                uv: uv,
+                uvTime: uvTime,
+                uvMax: uvMax,
+                uvMaxTime: uvMaxTime,
+                ozone: ozone,
+                ozoneTime: ozoneTime,
+                safeExposureTime: safeExposureTime,
+                sunInfo: nil // Ignore sun_info for now
+            )
+            
+            print("📊 UV Index: \(uvResult.uv)")
+            return uvResult
+            
+        } catch let error as UVIndexError {
+            print("❌ UV Service Error: \(error.localizedDescription)")
+            throw error
+        } catch {
+            print("❌ Network Error: \(error.localizedDescription)")
+            throw UVIndexError.networkError(error)
         }
-        
-        guard httpResponse.statusCode == 200 else {
-            throw UVIndexError.apiError(httpResponse.statusCode)
-        }
-        
-        let uvResponse = try JSONDecoder().decode(UVIndexResponse.self, from: data)
-        return uvResponse.result
     }
     
     private func buildURL(for location: CLLocation) -> URL {
@@ -85,14 +207,37 @@ final class OpenUVService: UVIndexService {
 
 final class MockUVIndexService: UVIndexService {
     func fetchUVIndex(for location: CLLocation) async throws -> UVIndexResult {
+        print("🧪 Mock UV service: Fetching UV data for location \(location.coordinate)")
+        
         // Simulate network delay
         try await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
         
-        // Return mock data
+        // Return realistic mock data based on time of day
+        let hour = Calendar.current.component(.hour, from: Date())
+        let baseUV: Double
+        
+        // Simulate realistic UV levels based on time of day
+        switch hour {
+        case 6...8:
+            baseUV = Double.random(in: 1...3) // Low morning UV
+        case 9...11:
+            baseUV = Double.random(in: 3...6) // Moderate morning UV
+        case 12...14:
+            baseUV = Double.random(in: 6...9) // High midday UV
+        case 15...17:
+            baseUV = Double.random(in: 4...7) // Moderate afternoon UV
+        case 18...20:
+            baseUV = Double.random(in: 1...4) // Low evening UV
+        default:
+            baseUV = Double.random(in: 0...2) // Very low night UV
+        }
+        
+        print("🧪 Mock UV service: Generated UV index \(baseUV) for hour \(hour)")
+        
         return UVIndexResult(
-            uv: Double.random(in: 0...11),
+            uv: baseUV,
             uvTime: ISO8601DateFormatter().string(from: Date()),
-            uvMax: Double.random(in: 0...11),
+            uvMax: baseUV + Double.random(in: 0...2),
             uvMaxTime: ISO8601DateFormatter().string(from: Date()),
             ozone: Double.random(in: 200...500),
             ozoneTime: ISO8601DateFormatter().string(from: Date()),
@@ -103,7 +248,8 @@ final class MockUVIndexService: UVIndexService {
                 st4: Int.random(in: 10...60),
                 st5: Int.random(in: 10...60),
                 st6: Int.random(in: 10...60)
-            )
+            ),
+            sunInfo: nil // Mock doesn't need sun info
         )
     }
 }
