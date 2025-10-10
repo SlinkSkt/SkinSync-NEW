@@ -52,12 +52,26 @@ struct AppTheme {
     let tertiaryBackground: Color = Color(.tertiarySystemBackground)
     /// The surface color for cards, sheets, and secondary UI elements.
     let surface: Color = Color(.secondarySystemBackground)
+    
+    // MARK: - Text Colors (following HIG)
     /// The main color for primary text content.
     let textPrimary: Color = .primary
     /// The color for secondary or less prominent text.
     let textSecondary: Color = .secondary
     /// The color for tertiary text.
     let textTertiary: Color = Color(.tertiaryLabel)
+    /// The color for quaternary text (least prominent).
+    let textQuaternary: Color = Color(.quaternaryLabel)
+    
+    // MARK: - Semantic Colors
+    /// Success color for positive actions and states
+    let success: Color = .green
+    /// Warning color for caution states
+    let warning: Color = .orange
+    /// Error color for destructive actions and errors
+    let error: Color = .red
+    /// Info color for informational content
+    let info: Color = .blue
     
     // MARK: - Design Tokens
     
@@ -73,25 +87,52 @@ struct AppTheme {
     /// Subtle shadow for interactive elements
     let subtleShadow: Color = Color.black.opacity(0.03)
     
-    /// Premium spacing constants following 8pt grid system
+    /// Spacing constants following Apple HIG 8pt grid system
     struct Spacing {
+        // Micro spacing
         static let xs: CGFloat = 4
+        
+        // Small spacing
         static let sm: CGFloat = 8
+        
+        // Medium spacing (most common)
         static let md: CGFloat = 16
+        
+        // Large spacing
         static let lg: CGFloat = 24
+        
+        // Extra large spacing
         static let xl: CGFloat = 32
+        
+        // Extra extra large spacing
         static let xxl: CGFloat = 48
+        
+        // Section spacing
+        static let section: CGFloat = 40
+        
+        // Screen edge padding
+        static let screenEdge: CGFloat = 20
     }
     
-    /// Premium typography scale
+    /// Typography scale following Apple HIG guidelines
     struct Typography {
-        static let largeTitle: Font = .largeTitle.weight(.semibold)
-        static let title: Font = .title2.weight(.semibold)
-        static let headline: Font = .headline.weight(.medium)
+        // Display styles - for large, prominent text
+        static let largeTitle: Font = .largeTitle.weight(.bold)
+        static let title: Font = .title.weight(.bold)
+        static let title2: Font = .title2.weight(.bold)
+        static let title3: Font = .title3.weight(.semibold)
+        
+        // Text styles - for body content
+        static let headline: Font = .headline.weight(.semibold)
         static let subheadline: Font = .subheadline.weight(.medium)
         static let body: Font = .body.weight(.regular)
+        static let bodyEmphasized: Font = .body.weight(.medium)
+        static let callout: Font = .callout.weight(.regular)
+        
+        // Caption styles - for secondary information
         static let caption: Font = .caption.weight(.regular)
         static let caption2: Font = .caption2.weight(.medium)
+        static let footnote: Font = .footnote.weight(.regular)
     }
 
     init(config: AppConfig) {

@@ -11,6 +11,7 @@ protocol DataStore {
     // Products
     func loadProducts() throws -> [Product]
     func save(products: [Product]) throws
+    func deleteProducts() throws
 
     // Routines
     func loadRoutines() throws -> [Routine]
@@ -153,6 +154,9 @@ final class FileDataStore: DataStore {
     func save(products: [Product]) throws {
         try saveEncodable(products, name: .products)
     }
+    func deleteProducts() throws {
+        try deleteFile(name: .products)
+    }
 
     // Routines
     func loadRoutines() throws -> [Routine] {
@@ -228,6 +232,14 @@ final class FileDataStore: DataStore {
         let url = try docURL(name.rawValue)
         let data = try encoder.encode(value)
         try data.write(to: url, options: .atomic)
+    }
+    
+    private func deleteFile(name: FileName) throws {
+        let url = try docURL(name.rawValue)
+        if fm.fileExists(atPath: url.path) {
+            try fm.removeItem(at: url)
+            debugLog("🗑️ Deleted \(name.rawValue) from Documents")
+        }
     }
 
     private func existingOrBundledURL(_ name: FileName) throws -> URL {

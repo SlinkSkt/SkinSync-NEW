@@ -6,5 +6,7 @@
 	<string>SkinSync uses notifications to remind you about your skincare routine.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>SkinSync uses your location to provide current UV index information for better skincare recommendations.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>SkinSync uses the camera to scan product barcodes and analyze your skin for personalized skincare recommendations.</string>
 </dict>
 </plist>

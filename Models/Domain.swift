@@ -83,9 +83,25 @@ struct Product: Identifiable, Codable, Hashable {
     var ingredients: [Ingredient]
     var barcode: String
     var rating: Double?
+    
+    // Open Beauty Facts enhanced fields
+    var imageURL: String?             // Remote image URL from OBF
+    var quantity: String?              // Product size/quantity
+    var productLabels: [String]?       // Product labels (cruelty-free, vegan, etc.)
+    var productCategories: [String]?   // Detailed categories
+    var allergens: [String]?          // Known allergens
+    var traces: [String]?             // Trace ingredients
+    var additives: [String]?          // Food additives
+    var nutritionGrade: String?       // Nutrition grade if available
+    var ingredientsText: String?      // Raw ingredients text from OBF
+    var lastModified: Date?           // Last modification date
+    var createdDate: Date?            // Creation date
+    var isFromOpenBeautyFacts: Bool = false  // Flag to indicate OBF source
 
     private enum CodingKeys: String, CodingKey {
         case id, name, brand, category, assetName, concerns, ingredients, barcode, rating
+        case imageURL, quantity, productLabels, productCategories, allergens, traces, additives
+        case nutritionGrade, ingredientsText, lastModified, createdDate, isFromOpenBeautyFacts
     }
 
     init(id: UUID = UUID(),
@@ -96,7 +112,19 @@ struct Product: Identifiable, Codable, Hashable {
          concerns: [Concern],
          ingredients: [Ingredient],
          barcode: String,
-         rating: Double?) {
+         rating: Double? = nil,
+         imageURL: String? = nil,
+         quantity: String? = nil,
+         productLabels: [String]? = nil,
+         productCategories: [String]? = nil,
+         allergens: [String]? = nil,
+         traces: [String]? = nil,
+         additives: [String]? = nil,
+         nutritionGrade: String? = nil,
+         ingredientsText: String? = nil,
+         lastModified: Date? = nil,
+         createdDate: Date? = nil,
+         isFromOpenBeautyFacts: Bool = false) {
         self.id = id
         self.name = name
         self.brand = brand
@@ -106,6 +134,18 @@ struct Product: Identifiable, Codable, Hashable {
         self.ingredients = ingredients
         self.barcode = barcode
         self.rating = rating
+        self.imageURL = imageURL
+        self.quantity = quantity
+        self.productLabels = productLabels
+        self.productCategories = productCategories
+        self.allergens = allergens
+        self.traces = traces
+        self.additives = additives
+        self.nutritionGrade = nutritionGrade
+        self.ingredientsText = ingredientsText
+        self.lastModified = lastModified
+        self.createdDate = createdDate
+        self.isFromOpenBeautyFacts = isFromOpenBeautyFacts
     }
 
     init(from decoder: Decoder) throws {
@@ -119,6 +159,20 @@ struct Product: Identifiable, Codable, Hashable {
         self.ingredients = try c.decode([Ingredient].self, forKey: .ingredients)
         self.barcode     = try c.decode(String.self, forKey: .barcode)
         self.rating      = try c.decodeIfPresent(Double.self, forKey: .rating)
+        
+        // Open Beauty Facts fields
+        self.imageURL = try c.decodeIfPresent(String.self, forKey: .imageURL)
+        self.quantity = try c.decodeIfPresent(String.self, forKey: .quantity)
+        self.productLabels = try c.decodeIfPresent([String].self, forKey: .productLabels)
+        self.productCategories = try c.decodeIfPresent([String].self, forKey: .productCategories)
+        self.allergens = try c.decodeIfPresent([String].self, forKey: .allergens)
+        self.traces = try c.decodeIfPresent([String].self, forKey: .traces)
+        self.additives = try c.decodeIfPresent([String].self, forKey: .additives)
+        self.nutritionGrade = try c.decodeIfPresent(String.self, forKey: .nutritionGrade)
+        self.ingredientsText = try c.decodeIfPresent(String.self, forKey: .ingredientsText)
+        self.lastModified = try c.decodeIfPresent(Date.self, forKey: .lastModified)
+        self.createdDate = try c.decodeIfPresent(Date.self, forKey: .createdDate)
+        self.isFromOpenBeautyFacts = try c.decodeIfPresent(Bool.self, forKey: .isFromOpenBeautyFacts) ?? false
     }
 
     func encode(to encoder: Encoder) throws {
@@ -132,6 +186,68 @@ struct Product: Identifiable, Codable, Hashable {
         try c.encode(ingredients, forKey: .ingredients)
         try c.encode(barcode, forKey: .barcode)
         try c.encodeIfPresent(rating, forKey: .rating)
+        
+        // Open Beauty Facts fields
+        try c.encodeIfPresent(imageURL, forKey: .imageURL)
+        try c.encodeIfPresent(quantity, forKey: .quantity)
+        try c.encodeIfPresent(productLabels, forKey: .productLabels)
+        try c.encodeIfPresent(productCategories, forKey: .productCategories)
+        try c.encodeIfPresent(allergens, forKey: .allergens)
+        try c.encodeIfPresent(traces, forKey: .traces)
+        try c.encodeIfPresent(additives, forKey: .additives)
+        try c.encodeIfPresent(nutritionGrade, forKey: .nutritionGrade)
+        try c.encodeIfPresent(ingredientsText, forKey: .ingredientsText)
+        try c.encodeIfPresent(lastModified, forKey: .lastModified)
+        try c.encodeIfPresent(createdDate, forKey: .createdDate)
+        try c.encode(isFromOpenBeautyFacts, forKey: .isFromOpenBeautyFacts)
+    }
+    
+    // MARK: - Hashable & Equatable Conformance
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(name)
+        hasher.combine(brand)
+        hasher.combine(category)
+        hasher.combine(barcode)
+        hasher.combine(rating)
+        hasher.combine(imageURL)
+        hasher.combine(quantity)
+        hasher.combine(productLabels)
+        hasher.combine(productCategories)
+        hasher.combine(allergens)
+        hasher.combine(traces)
+        hasher.combine(additives)
+        hasher.combine(nutritionGrade)
+        hasher.combine(ingredientsText)
+        hasher.combine(lastModified)
+        hasher.combine(createdDate)
+        hasher.combine(isFromOpenBeautyFacts)
+        hasher.combine(concerns)
+        hasher.combine(ingredients)
+    }
+    
+    static func == (lhs: Product, rhs: Product) -> Bool {
+        return lhs.id == rhs.id &&
+               lhs.name == rhs.name &&
+               lhs.brand == rhs.brand &&
+               lhs.category == rhs.category &&
+               lhs.barcode == rhs.barcode &&
+               lhs.rating == rhs.rating &&
+               lhs.imageURL == rhs.imageURL &&
+               lhs.quantity == rhs.quantity &&
+               lhs.productLabels == rhs.productLabels &&
+               lhs.productCategories == rhs.productCategories &&
+               lhs.allergens == rhs.allergens &&
+               lhs.traces == rhs.traces &&
+               lhs.additives == rhs.additives &&
+               lhs.nutritionGrade == rhs.nutritionGrade &&
+               lhs.ingredientsText == rhs.ingredientsText &&
+               lhs.lastModified == rhs.lastModified &&
+               lhs.createdDate == rhs.createdDate &&
+               lhs.isFromOpenBeautyFacts == rhs.isFromOpenBeautyFacts &&
+               lhs.concerns == rhs.concerns &&
+               lhs.ingredients == rhs.ingredients
     }
 }
 

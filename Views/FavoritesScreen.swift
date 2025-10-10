@@ -45,11 +45,11 @@ struct FavoritesScreen: View {
     // MARK: - Views
     private var emptyStateView: some View {
         ContentStateView(
-            icon: "heart",
+            icon: "heart.fill",
             title: "No favourites yet",
             message: "Tap the heart on any product to add it here."
         )
-        .padding()
+        .padding(AppTheme.Spacing.screenEdge)
         .accessibilityLabel("No favourites")
         .accessibilityHint("Tap the heart on any product to add it to your favourites.")
         .transition(.opacity.combined(with: .scale))
@@ -58,48 +58,70 @@ struct FavoritesScreen: View {
 
     private var favoritesListView: some View {
         List {
-            Section {
-                Text("\(vm.favorites.count) favourite\(vm.favorites.count == 1 ? "" : "s")")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .accessibilityLabel("Total favourites: \(vm.favorites.count)")
-            }
+            favoritesCountSection
             ForEach(groupedFavorites, id: \.key) { group in
-                Section(header:
-                    Text(group.key)
-                        .font(.headline)
-                        .accessibilityLabel("\(group.key) category")
-                ) {
-                    ForEach(group.value) { p in
-                        NavigationLink(destination: ProductDetailView(product: p, theme: theme)) {
-                            ProductRow(product: p, theme: theme)
-                                .accessibilityElement(children: .combine)
-                                .accessibilityLabel(p.name)
-                                .accessibilityHint("Tap to view details. Swipe left to remove from favourites.")
-                        }
-                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                            Button(role: .destructive) {
-                                withAnimation {
-                                    vm.toggleFavorite(p)
-                                }
-                            } label: {
-                                Label("Remove", systemImage: "heart.slash")
-                            }
-                            .accessibilityLabel("Remove \(p.name) from favourites")
-                        }
-                    }
-                }
+                favoritesGroupSection(group)
             }
         }
         .listStyle(.insetGrouped)
-        .animation(.easeInOut, value: vm.favorites)
+        .animation(.easeInOut(duration: 0.3), value: vm.favorites)
+    }
+    
+    private var favoritesCountSection: some View {
+        Section {
+            Text("\(vm.favorites.count) favourite\(vm.favorites.count == 1 ? "" : "s")")
+                .font(AppTheme.Typography.subheadline)
+                .foregroundStyle(.secondary)
+                .accessibilityLabel("Total favourites: \(vm.favorites.count)")
+        }
+    }
+    
+    private func favoritesGroupSection(_ group: (key: String, value: [Product])) -> some View {
+        Section(header: groupHeader(group.key)) {
+            ForEach(group.value) { product in
+                favoriteProductRow(product)
+            }
+        }
+    }
+    
+    private func groupHeader(_ category: String) -> some View {
+        Text(category)
+            .font(AppTheme.Typography.headline)
+            .foregroundStyle(.primary)
+            .accessibilityLabel("\(category) category")
+    }
+    
+    private func favoriteProductRow(_ product: Product) -> some View {
+        NavigationLink(destination: ProductDetailView(product: product, theme: theme, store: FileDataStore())
+                        .environmentObject(vm)) {
+            ProductRow(product: product, theme: theme)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(product.name)
+                .accessibilityHint("Tap to view details. Swipe left to remove from favourites.")
+        }
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+            removeFavoriteButton(for: product)
+        }
+    }
+    
+    private func removeFavoriteButton(for product: Product) -> some View {
+        Button(role: .destructive) {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                vm.toggleFavorite(product)
+            }
+        } label: {
+            Label("Remove", systemImage: "heart.slash")
+        }
+        .accessibilityLabel("Remove \(product.name) from favourites")
     }
 
     private var sortButton: some View {
         Button {
-            withAnimation { sortAscending.toggle() }
+            withAnimation(.easeInOut(duration: 0.2)) { sortAscending.toggle() }
         } label: {
-            Image(systemName: sortAscending ? "arrow.up" : "arrow.down")
+            Image(systemName: sortAscending ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
+                .font(.title3)
+                .foregroundStyle(theme.primary)
         }
         .accessibilityLabel(sortAscending ? "Sort A to Z" : "Sort Z to A")
         .accessibilityHint("Toggle sort order of your favourites.")

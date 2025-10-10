@@ -13,14 +13,28 @@ struct AssetOrRemoteImage: View {
     var placeholderSystemName: String = "photo"
 
     var body: some View {
-        Group {
-            if let name = assetName, !name.isEmpty, UIImage(named: name) != nil {
-                Image(name).resizable().scaledToFill()
-            } else if let urlStr = imageURL, let url = URL(string: urlStr) {
-                AsyncRemoteImage(url: url, placeholderSystemName: placeholderSystemName)
-            } else {
-                Image(systemName: placeholderSystemName).resizable().scaledToFit().padding(12).foregroundStyle(.secondary)
+        if let name = assetName, !name.isEmpty, UIImage(named: name) != nil {
+            Image(name)
+                .resizable()
+                .scaledToFill()
+        } else if let urlStr = imageURL, let url = URL(string: urlStr) {
+            AsyncImage(url: url) { image in
+                image
+                    .resizable()
+                    .scaledToFill()
+            } placeholder: {
+                Image(systemName: placeholderSystemName)
+                    .resizable()
+                    .scaledToFit()
+                    .padding(12)
+                    .foregroundStyle(.secondary)
             }
+        } else {
+            Image(systemName: placeholderSystemName)
+                .resizable()
+                .scaledToFit()
+                .padding(12)
+                .foregroundStyle(.secondary)
         }
     }
 }

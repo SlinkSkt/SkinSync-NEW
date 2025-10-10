@@ -19,50 +19,51 @@ struct UVIndexView: View {
     var body: some View {
         HStack(spacing: AppTheme.Spacing.lg) {
             // Left side - UV Index Info
-            VStack(alignment: .leading, spacing: AppTheme.Spacing.md) {
+            VStack(alignment: .leading, spacing: AppTheme.Spacing.lg) {
                 // Header with UV Index and Level
-                HStack(spacing: AppTheme.Spacing.sm) {
+                HStack(spacing: AppTheme.Spacing.md) {
                     Image(systemName: viewModel.uvLevel.icon)
-                        .font(.title2)
+                        .font(.title)
                         .foregroundStyle(uvIndexColor)
+                        .frame(width: 32, height: 32)
                     
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
                         if let uvIndex = viewModel.uvIndex {
                             Text("UV Index \(uvIndex, specifier: "%.1f")")
-                                .font(AppTheme.Typography.headline)
+                                .font(AppTheme.Typography.title3)
                                 .foregroundStyle(.primary)
                             
                             Text(viewModel.uvLevel.rawValue)
                                 .font(AppTheme.Typography.subheadline)
                                 .foregroundStyle(uvIndexColor)
-                                .fontWeight(.medium)
+                                .fontWeight(.semibold)
                         } else if viewModel.isLoading {
                             Text("Loading UV data...")
-                                .font(AppTheme.Typography.headline)
+                                .font(AppTheme.Typography.title3)
                                 .foregroundStyle(.secondary)
                         } else if viewModel.error != nil {
                             Text("UV data unavailable")
-                                .font(AppTheme.Typography.headline)
+                                .font(AppTheme.Typography.title3)
                                 .foregroundStyle(.secondary)
                         } else {
                             Text("Tap to get UV index")
-                                .font(AppTheme.Typography.headline)
+                                .font(AppTheme.Typography.title3)
                                 .foregroundStyle(.secondary)
                         }
                     }
                     
                     if viewModel.isLoading {
                         ProgressView()
-                            .scaleEffect(0.8)
+                            .scaleEffect(0.9)
                     }
                 }
                 
                 // Location and Recommendation
                 if let uvIndex = viewModel.uvIndex {
-                    VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
+                    VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
                         // Location info
                         HStack(spacing: AppTheme.Spacing.xs) {
-                            Image(systemName: "location")
+                            Image(systemName: "location.fill")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                             Text(viewModel.currentCity ?? "Current location")
@@ -82,6 +83,7 @@ struct UVIndexView: View {
                                 .font(AppTheme.Typography.caption)
                                 .foregroundStyle(.primary)
                                 .multilineTextAlignment(.leading)
+                                .lineLimit(2)
                         }
                     }
                 }
@@ -89,54 +91,55 @@ struct UVIndexView: View {
             
             // Right side - Graphics
             if let uvIndex = viewModel.uvIndex {
-                VStack(spacing: AppTheme.Spacing.md) {
+                VStack(spacing: AppTheme.Spacing.lg) {
                     // UV Index Circle
                     ZStack {
                         Circle()
-                            .stroke(uvIndexColor.opacity(0.3), lineWidth: 8)
-                            .frame(width: 80, height: 80)
+                            .stroke(uvIndexColor.opacity(0.2), lineWidth: 6)
+                            .frame(width: 88, height: 88)
                         
                         Circle()
                             .trim(from: 0, to: min(uvIndex / 11.0, 1.0))
-                            .stroke(uvIndexColor, style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                            .frame(width: 80, height: 80)
+                            .stroke(uvIndexColor, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                            .frame(width: 88, height: 88)
                             .rotationEffect(.degrees(-90))
-                            .animation(.easeInOut(duration: 1.0), value: uvIndex)
+                            .animation(.easeInOut(duration: 1.2), value: uvIndex)
                         
-                        VStack(spacing: 2) {
+                        VStack(spacing: AppTheme.Spacing.xs) {
                             Text("\(Int(uvIndex))")
-                                .font(.title2)
+                                .font(.title)
                                 .fontWeight(.bold)
                                 .foregroundStyle(uvIndexColor)
                             Text("UV")
-                                .font(.caption2)
+                                .font(AppTheme.Typography.caption)
                                 .foregroundStyle(.secondary)
+                                .fontWeight(.medium)
                         }
                     }
                     
                     // Current UV Level Indicator
-                    VStack(spacing: 4) {
-                        HStack(spacing: 4) {
+                    VStack(spacing: AppTheme.Spacing.xs) {
+                        HStack(spacing: AppTheme.Spacing.xs) {
                             Circle()
                                 .fill(uvIndexColor)
-                                .frame(width: 8, height: 8)
+                                .frame(width: 10, height: 10)
                             Text(viewModel.uvLevel.rawValue)
-                                .font(.caption2)
+                                .font(AppTheme.Typography.caption)
                                 .foregroundStyle(uvIndexColor)
-                                .fontWeight(.medium)
+                                .fontWeight(.semibold)
                         }
                         
                         Text("Current Level")
-                            .font(.caption2)
+                            .font(AppTheme.Typography.caption2)
                             .foregroundStyle(.secondary)
                     }
                 }
             } else {
                 // Placeholder graphics when no data
-                VStack(spacing: AppTheme.Spacing.md) {
+                VStack(spacing: AppTheme.Spacing.lg) {
                     Circle()
-                        .stroke(Color(.quaternaryLabel), lineWidth: 8)
-                        .frame(width: 80, height: 80)
+                        .stroke(Color(.quaternaryLabel), lineWidth: 6)
+                        .frame(width: 88, height: 88)
                         .overlay(
                             Image(systemName: "questionmark")
                                 .font(.title2)
@@ -146,11 +149,12 @@ struct UVIndexView: View {
             }
         }
         .padding(AppTheme.Spacing.lg)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: AppTheme.mediumCornerRadius))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: AppTheme.cardCornerRadius))
         .overlay(
-            RoundedRectangle(cornerRadius: AppTheme.mediumCornerRadius)
-                .stroke(uvIndexColor.opacity(0.3), lineWidth: 1)
+            RoundedRectangle(cornerRadius: AppTheme.cardCornerRadius)
+                .stroke(uvIndexColor.opacity(0.2), lineWidth: 1)
         )
+        .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 3)
         .onAppear {
             if viewModel.uvIndex == nil && !viewModel.isLoading {
                 viewModel.requestLocationAndFetchUVIndex()
@@ -163,6 +167,9 @@ struct UVIndexView: View {
             print("🔄 UV Index tapped - retrying...")
             viewModel.requestLocationAndFetchUVIndex()
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("UV Index: \(viewModel.uvIndex?.formatted() ?? "Loading")")
+        .accessibilityHint("Tap to refresh UV index data")
     }
     
     private var uvIndexColor: Color {
