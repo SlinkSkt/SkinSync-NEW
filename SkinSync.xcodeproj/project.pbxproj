@@ -7,7 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FF6D2FB42E9AB09900AB353D /* SyncAIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF6D2FB32E9AB09900AB353D /* SyncAIView.swift */; };
+		FF6D2FB62E9AB3FA00AB353D /* OpenAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF6D2FB52E9AB3FA00AB353D /* OpenAIService.swift */; };
+		FF6D2FB82E9AB40600AB353D /* SyncAIViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF6D2FB72E9AB40600AB353D /* SyncAIViewModel.swift */; };
+		FF6D2FBA2E9AC83400AB353D /* ProfileEditorViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF6D2FB92E9AC83400AB353D /* ProfileEditorViews.swift */; };
 		FF70F3812E98E66A00728BC5 /* ScannerPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF70F3802E98E66A00728BC5 /* ScannerPage.swift */; };
+		FF70F3832E9A32D900728BC5 /* RoutineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF70F3822E9A32D900728BC5 /* RoutineView.swift */; };
+		FF70F3852E9A33C000728BC5 /* NotificationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF70F3842E9A33C000728BC5 /* NotificationViewModel.swift */; };
 		FF935B032E62056200D412DD /* products.json in Resources */ = {isa = PBXBuildFile; fileRef = FF935AF82E62056200D412DD /* products.json */; };
 		FF935B042E62056200D412DD /* SkinSyncApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF935AF32E62056200D412DD /* SkinSyncApp.swift */; };
 		FF935B052E62056200D412DD /* DataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF935AFA2E62056200D412DD /* DataStore.swift */; };
@@ -42,7 +48,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		FF6D2FB32E9AB09900AB353D /* SyncAIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncAIView.swift; sourceTree = "<group>"; };
+		FF6D2FB52E9AB3FA00AB353D /* OpenAIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIService.swift; sourceTree = "<group>"; };
+		FF6D2FB72E9AB40600AB353D /* SyncAIViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncAIViewModel.swift; sourceTree = "<group>"; };
+		FF6D2FB92E9AC83400AB353D /* ProfileEditorViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileEditorViews.swift; sourceTree = "<group>"; };
 		FF70F3802E98E66A00728BC5 /* ScannerPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScannerPage.swift; sourceTree = "<group>"; };
+		FF70F3822E9A32D900728BC5 /* RoutineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutineView.swift; sourceTree = "<group>"; };
+		FF70F3842E9A33C000728BC5 /* NotificationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationViewModel.swift; sourceTree = "<group>"; };
 		FF935AA62E62031200D412DD /* SkinSync.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkinSync.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FF935AF22E62056200D412DD /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		FF935AF32E62056200D412DD /* SkinSyncApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkinSyncApp.swift; sourceTree = "<group>"; };
@@ -161,6 +173,7 @@
 		FF935AFC2E62056200D412DD /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				FF6D2FB52E9AB3FA00AB353D /* OpenAIService.swift */,
 				FFE901C32E98C98300DDC574 /* ProductRepository.swift */,
 				FFE900F32E91656C00DDC574 /* UVIndexService.swift */,
 				FF935B112E620D5400D412DD /* Camera.swift */,
@@ -183,6 +196,8 @@
 		FF935B002E62056200D412DD /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				FF6D2FB72E9AB40600AB353D /* SyncAIViewModel.swift */,
+				FF70F3842E9A33C000728BC5 /* NotificationViewModel.swift */,
 				FFE901BD2E987C5700DDC574 /* TimelineViewModel.swift */,
 				FFE901BE2E987C5700DDC574 /* ViewModels.swift */,
 				FFE901B92E98775200DDC574 /* ProductDetailViewModel.swift */,
@@ -199,6 +214,9 @@
 		FF935B022E62056200D412DD /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				FF6D2FB92E9AC83400AB353D /* ProfileEditorViews.swift */,
+				FF6D2FB32E9AB09900AB353D /* SyncAIView.swift */,
+				FF70F3822E9A32D900728BC5 /* RoutineView.swift */,
 				FF70F3802E98E66A00728BC5 /* ScannerPage.swift */,
 				FFE901C12E987C6700DDC574 /* AssetOrRemoteImage.swift */,
 				FFE900F72E91659000DDC574 /* UVIndexView.swift */,
@@ -291,6 +309,7 @@
 				FF935B342E62D36000D412DD /* HomeViewModel.swift in Sources */,
 				FF935B042E62056200D412DD /* SkinSyncApp.swift in Sources */,
 				FFE900F82E91659000DDC574 /* UVIndexView.swift in Sources */,
+				FF70F3852E9A33C000728BC5 /* NotificationViewModel.swift in Sources */,
 				FF935B052E62056200D412DD /* DataStore.swift in Sources */,
 				FFE900F42E91656C00DDC574 /* UVIndexService.swift in Sources */,
 				FF935B302E62C51300D412DD /* ProductsViewModel.swift in Sources */,
@@ -309,16 +328,21 @@
 				FF70F3812E98E66A00728BC5 /* ScannerPage.swift in Sources */,
 				FFE900F62E91658300DDC574 /* UVIndexViewModel.swift in Sources */,
 				FF935B182E62191600D412DD /* MyRoutineScreen.swift in Sources */,
+				FF6D2FB62E9AB3FA00AB353D /* OpenAIService.swift in Sources */,
 				FF935B2E2E62C4E200D412DD /* ProductsScreen.swift in Sources */,
 				FF935B7D2E6366C700D412DD /* RemindersSettingsView.swift in Sources */,
+				FF6D2FB42E9AB09900AB353D /* SyncAIView.swift in Sources */,
 				FF935B362E62D37100D412DD /* ProfileViewModel.swift in Sources */,
 				FFE900F22E915D0E00DDC574 /* ProfileView.swift in Sources */,
 				FF935B382E62D38000D412DD /* ScanViewModel.swift in Sources */,
 				FF935B122E620D5D00D412DD /* Camera.swift in Sources */,
 				FF935B0A2E62056200D412DD /* IngredientCloudLayout.swift in Sources */,
 				FF935B0B2E62056200D412DD /* Domain.swift in Sources */,
+				FF6D2FBA2E9AC83400AB353D /* ProfileEditorViews.swift in Sources */,
+				FF70F3832E9A32D900728BC5 /* RoutineView.swift in Sources */,
 				FF935B0C2E62056200D412DD /* RootAndScreens.swift in Sources */,
 				FFE901BA2E98775200DDC574 /* ProductDetailViewModel.swift in Sources */,
+				FF6D2FB82E9AB40600AB353D /* SyncAIViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

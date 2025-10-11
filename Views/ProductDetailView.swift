@@ -702,53 +702,70 @@ private struct RoutineAssignmentSheet: View {
     let product: Product
     @ObservedObject var routineVM: RoutineViewModel
     @Binding var isPresented: Bool
-    @State private var routineIndex: Int = 0
-    @State private var slotIndex: Int = 0
+    @State private var selectedRoutine: RoutineType = .morning
     
-    private var routines: [Routine] { routineVM.routines }
-    private var currentRoutine: Routine? {
-        guard routineIndex >= 0, routineIndex < routines.count else { return nil }
-        return routines[routineIndex]
+    enum RoutineType: String, CaseIterable {
+        case morning = "Morning"
+        case evening = "Evening"
     }
-    private var currentSlots: [RoutineSlot] { currentRoutine?.slots ?? [] }
     
     var body: some View {
             NavigationStack {
                 Form {
-                    if routines.isEmpty {
-                        Section {
-                            Text("No routines found. Create default AM/PM routines first, then assign this product to a step.")
+                Section("Choose Routine") {
+                    Picker("Routine", selection: $selectedRoutine) {
+                        ForEach(RoutineType.allCases, id: \.self) { routine in
+                            Text(routine.rawValue).tag(routine)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+                
+                Section("Product Info") {
+                    HStack {
+                        ProductImage(
+                            imageName: product.imageName,
+                            assetName: product.assetName,
+                            imageURL: product.imageURL
+                        )
+                        .frame(width: 50, height: 50)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(product.name)
+                                .font(.system(size: 16, weight: .semibold))
+                            Text(product.brand)
+                                .font(.system(size: 14, weight: .medium))
                                 .foregroundStyle(.secondary)
-                                .font(.callout)
                         }
-                        Section {
-                            Button {
-                                routineVM.ensureDefaultRoutinesIfNeeded()
-                            } label: {
-                                Label("Create AM & PM routines", systemImage: "calendar.badge.plus")
-                            }
-                        }
+                        
+                        Spacer()
+                    }
+                }
+                
+                Section("Current Products") {
+                    let currentProducts = selectedRoutine == .morning ? routineVM.morning : routineVM.evening
+                    
+                    if currentProducts.isEmpty {
+                        Text("No products in \(selectedRoutine.rawValue.lowercased()) routine")
+                            .foregroundStyle(.secondary)
+                            .font(.callout)
                     } else {
-                        Section("Choose Routine") {
-                            Picker("Routine", selection: $routineIndex) {
-                                ForEach(routines.indices, id: \.self) { i in
-                                    Text(routines[i].title).tag(i)
-                                }
+                        ForEach(currentProducts) { product in
+                            HStack {
+                                ProductImage(
+                                    imageName: product.imageName,
+                                    assetName: product.assetName,
+                                    imageURL: product.imageURL
+                                )
+                                .frame(width: 30, height: 30)
+                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                                
+                                Text(product.name)
+                                    .font(.system(size: 14, weight: .medium))
+                                
+                                Spacer()
                             }
-                            .onChange(of: routineIndex) {
-                                slotIndex = 0
-                            }
-                        }
-
-                        Section("Choose Step") {
-                            if currentSlots.isEmpty {
-                                Text("No steps available").foregroundStyle(.secondary)
-                            } else {
-                                Picker("Step", selection: $slotIndex) {
-                                    ForEach(currentSlots.indices, id: \.self) { j in
-                                        Text(currentSlots[j].step).tag(j)
-                                    }
-                                }
                             }
                         }
                     }
@@ -760,14 +777,16 @@ private struct RoutineAssignmentSheet: View {
                     }
                     ToolbarItem(placement: .confirmationAction) {
                         Button("Add") {
-                            guard let routine = currentRoutine, !currentSlots.isEmpty else { return }
-                            let slot = currentSlots[slotIndex]
-                            routineVM.set(product: product, for: routine.id, slotID: slot.id)
-                        isPresented = false
+                        if selectedRoutine == .morning {
+                            routineVM.addToMorning(product)
+                        } else {
+                            routineVM.addToEvening(product)
                         }
-                        .disabled(currentRoutine == nil || currentSlots.isEmpty)
+                        isPresented = false
                     }
+                    .disabled(routineVM.isProductInAnyRoutine(product))
                 }
+            }
         }
         .presentationDetents([.medium, .large])
     }

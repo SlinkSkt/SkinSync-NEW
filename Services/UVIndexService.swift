@@ -94,15 +94,38 @@ protocol UVIndexService {
 // MARK: - OpenUV API Implementation
 
 final class OpenUVService: UVIndexService {
-    private let apiKey: String
     private let session: URLSession
+    private let plistKey = "OpenUV_API_Key"
     
-    init(apiKey: String, session: URLSession = .shared) {
-        self.apiKey = apiKey
+    init(session: URLSession = .shared) {
         self.session = session
     }
     
+    // MARK: - API Key Management
+    private var apiKey: String? {
+        return getAPIKeyFromPlist()
+    }
+    
+    func hasAPIKey() -> Bool {
+        return apiKey != nil
+    }
+    
+    // MARK: - Info.plist Configuration
+    private func getAPIKeyFromPlist() -> String? {
+        guard let path = Bundle.main.path(forResource: "Info", ofType: "plist"),
+              let plist = NSDictionary(contentsOfFile: path),
+              let apiKey = plist[plistKey] as? String,
+              !apiKey.isEmpty else {
+            return nil
+        }
+        return apiKey
+    }
+    
     func fetchUVIndex(for location: CLLocation) async throws -> UVIndexResult {
+        guard let apiKey = apiKey else {
+            throw UVIndexError.noAPIKey
+        }
+        
         let url = buildURL(for: location)
         print("🌐 Fetching UV data from: \(url)")
         print("🔑 Using API key: \(apiKey.prefix(10))...")
@@ -257,6 +280,7 @@ final class MockUVIndexService: UVIndexService {
 // MARK: - Errors
 
 enum UVIndexError: LocalizedError {
+    case noAPIKey
     case locationPermissionDenied
     case locationUnavailable
     case invalidResponse
@@ -265,6 +289,8 @@ enum UVIndexError: LocalizedError {
     
     var errorDescription: String? {
         switch self {
+        case .noAPIKey:
+            return "OpenUV API key not configured. Please add your API key in settings."
         case .locationPermissionDenied:
             return "Location permission denied"
         case .locationUnavailable:

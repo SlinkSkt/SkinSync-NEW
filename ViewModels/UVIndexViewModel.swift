@@ -18,6 +18,7 @@ final class UVIndexViewModel: NSObject, ObservableObject {
     @Published var currentCity: String?
     
     private let uvService: UVIndexService
+    private let mockService = MockUVIndexService()
     private let locationManager = CLLocationManager()
     private let geocoder = CLGeocoder()
     private var cancellables = Set<AnyCancellable>()
@@ -40,6 +41,14 @@ final class UVIndexViewModel: NSObject, ObservableObject {
     func testWithFallbackLocation() {
         print("🧪 Testing UV API with fallback location...")
         fetchUVIndexWithFallback()
+    }
+    
+    func forceMockData() {
+        print("🧪 Forcing mock UV data...")
+        let mockLocation = CLLocation(latitude: -33.8688, longitude: 151.2093)
+        Task {
+            await fetchMockData(for: mockLocation)
+        }
     }
     
     func requestLocationAndFetchCity() {
@@ -134,11 +143,8 @@ final class UVIndexViewModel: NSObject, ObservableObject {
                 await getCityName(from: location)
             } catch {
                 print("❌ UV fetch error: \(error.localizedDescription)")
-                await MainActor.run {
-                    self.error = error as? UVIndexError ?? .networkError(error)
-                    self.isLoading = false
-                    print("❌ Error set in UI: \(self.error?.localizedDescription ?? "Unknown")")
-                }
+                print("🔄 Falling back to mock data...")
+                await fetchMockData(for: location)
             }
         }
     }
@@ -171,12 +177,37 @@ final class UVIndexViewModel: NSObject, ObservableObject {
                     }
                 } catch {
                     print("❌ UV fetch error with fallback: \(error.localizedDescription)")
-                    await MainActor.run {
-                        self.error = error as? UVIndexError ?? .networkError(error)
-                        self.isLoading = false
-                        print("❌ Error set in UI: \(self.error?.localizedDescription ?? "Unknown")")
-                    }
+                    print("🔄 Falling back to mock data...")
+                    await fetchMockData(for: fallbackLocation)
                 }
+            }
+        }
+    }
+    
+    private func fetchMockData(for location: CLLocation) async {
+        print("🧪 Fetching mock UV data for location: \(location.coordinate)")
+        
+        do {
+            let result = try await mockService.fetchUVIndex(for: location)
+            print("✅ Mock UV data successful, UV index: \(result.uv)")
+            
+            await MainActor.run {
+                self.uvIndex = result.uv
+                self.lastUpdated = Date()
+                self.isLoading = false
+                self.error = nil
+                self.cacheData()
+                print("✅ Mock UV data updated in UI")
+            }
+            
+            // Get city name from location
+            await getCityName(from: location)
+        } catch {
+            print("❌ Mock UV fetch error: \(error.localizedDescription)")
+            await MainActor.run {
+                self.error = error as? UVIndexError ?? .networkError(error)
+                self.isLoading = false
+                print("❌ Mock error set in UI: \(self.error?.localizedDescription ?? "Unknown")")
             }
         }
     }

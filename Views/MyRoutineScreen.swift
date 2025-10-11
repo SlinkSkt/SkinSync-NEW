@@ -6,6 +6,7 @@ import SwiftUI
 struct MyRoutineScreen: View {
     // Uses the same RoutineViewModel the app injects in RootView
     @EnvironmentObject private var vm: RoutineViewModel
+    @EnvironmentObject private var notificationVM: NotificationViewModel
     let theme: AppTheme
 
     // Local date state for the week strip
@@ -82,13 +83,13 @@ struct MyRoutineScreen: View {
                 }
                 .padding(.horizontal, AppTheme.Spacing.md)
 
-                // Empty state if there are no routines/slots at all
-                if vm.routines.flatMap({ $0.slots }).isEmpty {
+                // Empty state if there are no products in routines
+                if vm.morning.isEmpty && vm.evening.isEmpty {
                     VStack(spacing: AppTheme.Spacing.lg) {
                         ContentStateView(
                             icon: "calendar.badge.plus",
                             title: "No routine yet",
-                            message: "Use the Products tab to add items to AM/PM steps."
+                            message: "Use the Products tab to add items to your morning and evening routines."
                         )
                         
                         Button(action: {}) {
@@ -104,20 +105,11 @@ struct MyRoutineScreen: View {
                     .padding(.horizontal, AppTheme.Spacing.md)
                 }
 
-                // Empty state if there are no routines/slots at all
-                if vm.routines.flatMap({ $0.slots }).isEmpty {
-                    ContentStateView(
-                        icon: "calendar.badge.plus",
-                        title: "No routine yet",
-                        message: "Use the Products tab to add items to AM/PM steps."
-                    )
-                    .padding(.horizontal)
-                }
 
                 // Reminders subpage entry
                 NavigationLink {
                     RemindersSettingsView()
-                        .environmentObject(vm) // pass same VM
+                        .environmentObject(notificationVM) // pass NotificationViewModel
                 } label: {
                     VStack(alignment: .leading, spacing: AppTheme.Spacing.lg) {
                         Label("Notification Settings", systemImage: "bell.badge")
@@ -132,13 +124,13 @@ struct MyRoutineScreen: View {
                                         .foregroundStyle(.secondary)
                                     Text(amTimeString)
                                         .font(AppTheme.Typography.body)
-                                        .foregroundStyle(vm.notif.enableAM ? .primary : .secondary)
+                                        .foregroundStyle(notificationVM.notif.enableAM ? .primary : .secondary)
                                 }
                                 
                                 Spacer()
                                 
-                                Image(systemName: vm.notif.enableAM ? "checkmark.circle.fill" : "circle")
-                                    .foregroundStyle(vm.notif.enableAM ? .green : .secondary)
+                                Image(systemName: notificationVM.notif.enableAM ? "checkmark.circle.fill" : "circle")
+                                    .foregroundStyle(notificationVM.notif.enableAM ? .green : .secondary)
                                     .font(.title3)
                             }
                             
@@ -151,13 +143,13 @@ struct MyRoutineScreen: View {
                                         .foregroundStyle(.secondary)
                                     Text(pmTimeString)
                                         .font(AppTheme.Typography.body)
-                                        .foregroundStyle(vm.notif.enablePM ? .primary : .secondary)
+                                        .foregroundStyle(notificationVM.notif.enablePM ? .primary : .secondary)
                                 }
                                 
                                 Spacer()
                                 
-                                Image(systemName: vm.notif.enablePM ? "checkmark.circle.fill" : "circle")
-                                    .foregroundStyle(vm.notif.enablePM ? .green : .secondary)
+                                Image(systemName: notificationVM.notif.enablePM ? "checkmark.circle.fill" : "circle")
+                                    .foregroundStyle(notificationVM.notif.enablePM ? .green : .secondary)
                                     .font(.title3)
                             }
                         }
@@ -179,29 +171,34 @@ struct MyRoutineScreen: View {
             .padding(.vertical, AppTheme.Spacing.md)
         }
         .onAppear {
-            vm.load()                // load routines/products + notif prefs
+            Task {
+                await vm.load()                // load morning/evening products
+            }
             selectedDate = Date()
         }
         .navigationTitle("Routine")
-        .animation(.default, value: vm.routines) // animate card updates when assignments change
+        .animation(.default, value: vm.morning.count + vm.evening.count) // animate card updates when products change
     }
 
     // MARK: - Helpers
 
     /// Build step list for a routine title ("AM" or "PM").
     private func steps(for title: String) -> [(slot: RoutineSlot, productName: String?)] {
-        guard let routine = vm.routines.first(where: { $0.title.lowercased() == title.lowercased() }) else { return [] }
-        return routine.slots.map { slot in
-            let name = slot.productID.flatMap { vm.productsByID[$0]?.name }
-            return (slot, name)
+        // For the new simplified system, we'll create mock slots based on products
+        let products = title.lowercased() == "am" ? vm.morning : vm.evening
+        
+        // Create simple slots for each product
+        return products.map { product in
+            let slot = RoutineSlot(step: product.name, productID: product.id)
+            return (slot: slot, productName: product.name)
         }
     }
 
     private var amTimeString: String {
-        Self.timeFormatter.string(from: dateFrom(hour: vm.notif.amHour, minute: vm.notif.amMinute))
+        Self.timeFormatter.string(from: dateFrom(hour: notificationVM.notif.amHour, minute: notificationVM.notif.amMinute))
     }
     private var pmTimeString: String {
-        Self.timeFormatter.string(from: dateFrom(hour: vm.notif.pmHour, minute: vm.notif.pmMinute))
+        Self.timeFormatter.string(from: dateFrom(hour: notificationVM.notif.pmHour, minute: notificationVM.notif.pmMinute))
     }
 
     private static let timeFormatter: DateFormatter = {

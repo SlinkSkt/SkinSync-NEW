@@ -1,132 +1,167 @@
-// https://www.swift.org/packages/database.html
 import Foundation
+import SwiftUI
 
-/// Manages AM/PM routines, slot assignments, and reminder preferences.
-/// Runs on the main actor so changes are safe for SwiftUI.
+/// Manages Morning and Evening routine products with drag-to-reorder and persistence
 @MainActor
 final class RoutineViewModel: ObservableObject {
-
-    // MARK: - Published state
-    @Published var routines: [Routine] = []
-    @Published var productsByID: [UUID: Product] = [:]
-    @Published var notif: NotificationPrefs
-
+    
+    // MARK: - Published State
+    @Published var morning: [Product] = []
+    @Published var evening: [Product] = []
+    @Published var isDragging: Bool = false
+    @Published var draggingProduct: Product?
+    
     // MARK: - Dependencies
     private let store: DataStore
-    private let scheduler: NotificationScheduler   // no generics here
-
+    private let productRepository: ProductRepository?
+    
     // MARK: - Init
-    init(store: DataStore, scheduler: NotificationScheduler) {
+    init(store: DataStore, productRepository: ProductRepository? = nil) {
         self.store = store
-        self.scheduler = scheduler
-        self.notif = (try? store.loadNotificationPrefs())
-        ?? NotificationPrefs(enableAM: false, amHour: 7, amMinute: 30,
-                             enablePM: false, pmHour: 21, pmMinute: 0)
+        self.productRepository = productRepository
+        print("🔄 RoutineViewModel: Initialized")
     }
-
+    
     // MARK: - Loading
-    /// Structured async load. Call as `Task { try? await vm.load() }` from views,
-    /// or use the convenience `load()` wrapper below.
-    func load() async throws {
-        let prods = (try? store.loadProducts()) ?? []
-        let r     = (try? store.loadRoutines()) ?? []
-
-        productsByID = Dictionary(uniqueKeysWithValues: prods.map { ($0.id, $0) })
-        routines = r
-
-        // Create defaults if needed (AM/PM with sensible steps).
-        if routines.isEmpty { ensureDefaultRoutinesIfNeeded() }
+    func load() async {
+        print("🔄 RoutineViewModel: Loading routines...")
+        
+        // Load morning routine
+        if let morningData = try? store.loadData(for: .morningRoutine),
+           let morningProducts = try? JSONDecoder().decode([Product].self, from: morningData) {
+            morning = morningProducts
+            print("🔄 RoutineViewModel: Loaded \(morningProducts.count) morning products")
+        }
+        
+        // Load evening routine
+        if let eveningData = try? store.loadData(for: .eveningRoutine),
+           let eveningProducts = try? JSONDecoder().decode([Product].self, from: eveningData) {
+            evening = eveningProducts
+            print("🔄 RoutineViewModel: Loaded \(eveningProducts.count) evening products")
+        }
+        
+        print("🔄 RoutineViewModel: Load complete - Morning: \(morning.count), Evening: \(evening.count)")
     }
-
-    /// Convenience wrapper for `.onAppear` call sites.
-    func load() { Task { try? await load() } }
-
-    // MARK: - Defaults
-    /// Create AM/PM with standard slots when no routines exist.
-    func ensureDefaultRoutinesIfNeeded() {
-        guard routines.isEmpty else { return }
-        let am = Routine(
-            title: "AM",
-            slots: [
-                RoutineSlot(step: "Cleanser"),
-                RoutineSlot(step: "Treatment"),
-                RoutineSlot(step: "Moisturiser"),
-                RoutineSlot(step: "Sunscreen")
-            ]
-        )
-        let pm = Routine(
-            title: "PM",
-            slots: [
-                RoutineSlot(step: "Cleanser"),
-                RoutineSlot(step: "Treatment"),
-                RoutineSlot(step: "Moisturiser")
-            ]
-        )
-        routines = [am, pm]
-        persistRoutines()
-    }
-
-    // MARK: - Slot assignment
-    /// Link a product to a specific slot in a routine (e.g., assign Cleanser to AM/Cleanser).
-    func set(product: Product, for routineID: UUID, slotID: UUID) {
-        guard let rIndex = routines.firstIndex(where: { $0.id == routineID }),
-              let sIndex = routines[rIndex].slots.firstIndex(where: { $0.id == slotID }) else {
+    
+    // MARK: - Add Products
+    func addToMorning(_ product: Product) {
+        // Prevent duplicates
+        guard !morning.contains(where: { $0.id == product.id }) else {
+            print("🔄 RoutineViewModel: Product already in morning routine")
             return
         }
-        // Mutating nested state: notify manually for SwiftUI to refresh.
-        routines[rIndex].slots[sIndex].productID = product.id
-        productsByID[product.id] = product
-
-        persistRoutines()
-        persistProducts()
-        objectWillChange.send()
+        
+        morning.append(product)
+        saveMorning()
+        print("🔄 RoutineViewModel: Added '\(product.name)' to morning routine")
     }
-
-    /// Remove any product assigned to the given slot.
-    func clearSlot(routineID: UUID, slotID: UUID) {
-        guard let rIndex = routines.firstIndex(where: { $0.id == routineID }),
-              let sIndex = routines[rIndex].slots.firstIndex(where: { $0.id == slotID }) else { return }
-        routines[rIndex].slots[sIndex].productID = nil
-        persistRoutines()
-        objectWillChange.send()
-    }
-
-    // MARK: - Notifications
-    /// Save prefs then schedule/cancel notifications accordingly.
-    func applyNotificationPrefs(_ prefs: NotificationPrefs) async {
-        self.notif = prefs
-        try? store.save(notificationPrefs: prefs)
-
-        let granted = await scheduler.requestAuth()
-        guard granted else { return }
-
-        if prefs.enableAM {
-            try? await scheduler.scheduleDaily(
-                identifier: "skinsync.am",
-                hour: prefs.amHour, minute: prefs.amMinute,
-                body: "Time for your AM routine."
-            )
-        } else {
-            await scheduler.cancel(identifier: "skinsync.am")
+    
+    func addToEvening(_ product: Product) {
+        // Prevent duplicates
+        guard !evening.contains(where: { $0.id == product.id }) else {
+            print("🔄 RoutineViewModel: Product already in evening routine")
+            return
         }
-
-        if prefs.enablePM {
-            try? await scheduler.scheduleDaily(
-                identifier: "skinsync.pm",
-                hour: prefs.pmHour, minute: prefs.pmMinute,
-                body: "Time for your PM routine."
-            )
-        } else {
-            await scheduler.cancel(identifier: "skinsync.pm")
-        }
+        
+        evening.append(product)
+        saveEvening()
+        print("🔄 RoutineViewModel: Added '\(product.name)' to evening routine")
     }
-
+    
+    // MARK: - Reorder Products
+    func moveMorning(from source: IndexSet, to destination: Int) {
+        var snapshot = morning
+        // Filter out any invalid indices that might have been produced by gesture math
+        let validSource = IndexSet(source.filter { $0 >= 0 && $0 < snapshot.count })
+        guard !validSource.isEmpty else {
+            print("🔄 RoutineViewModel: moveMorning skipped — empty/invalid source: \(source)")
+            return
+        }
+        // Clamp destination to a valid insertion point [0...count]
+        let clampedDestination = max(0, min(destination, snapshot.count))
+        // Perform move on the snapshot first to avoid out-of-bounds on the live array
+        snapshot.move(fromOffsets: validSource, toOffset: clampedDestination)
+        morning = snapshot
+        saveMorning()
+        print("🔄 RoutineViewModel: Reordered morning routine (source: \(Array(validSource)), dest: \(clampedDestination))")
+    }
+    
+    func moveEvening(from source: IndexSet, to destination: Int) {
+        var snapshot = evening
+        // Filter out any invalid indices that might have been produced by gesture math
+        let validSource = IndexSet(source.filter { $0 >= 0 && $0 < snapshot.count })
+        guard !validSource.isEmpty else {
+            print("🔄 RoutineViewModel: moveEvening skipped — empty/invalid source: \(source)")
+            return
+        }
+        // Clamp destination to a valid insertion point [0...count]
+        let clampedDestination = max(0, min(destination, snapshot.count))
+        // Perform move on the snapshot first to avoid out-of-bounds on the live array
+        snapshot.move(fromOffsets: validSource, toOffset: clampedDestination)
+        evening = snapshot
+        saveEvening()
+        print("🔄 RoutineViewModel: Reordered evening routine (source: \(Array(validSource)), dest: \(clampedDestination))")
+    }
+    
+    // MARK: - Remove Products
+    func removeFromMorning(_ product: Product) {
+        morning.removeAll { $0.id == product.id }
+        saveMorning()
+        print("🔄 RoutineViewModel: Removed '\(product.name)' from morning routine")
+    }
+    
+    func removeFromEvening(_ product: Product) {
+        evening.removeAll { $0.id == product.id }
+        saveEvening()
+        print("🔄 RoutineViewModel: Removed '\(product.name)' from evening routine")
+    }
+    
+    // MARK: - Drag State Management
+    func startDragging(_ product: Product) {
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+            draggingProduct = product
+            isDragging = true
+        }
+        print("🔄 RoutineViewModel: Started dragging '\(product.name)'")
+    }
+    
+    func endDragging() {
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.9)) {
+            draggingProduct = nil
+            isDragging = false
+        }
+        print("🔄 RoutineViewModel: Ended dragging")
+    }
+    
     // MARK: - Persistence
-    private func persistRoutines() {
-        do { try store.save(routines: routines) } catch { /* optional: log */ }
+    private func saveMorning() {
+        do {
+            let data = try JSONEncoder().encode(morning)
+            try store.save(data: data, for: .morningRoutine)
+        } catch {
+            print("🔄 RoutineViewModel: Failed to save morning routine: \(error)")
+        }
     }
-
-    private func persistProducts() {
-        do { try store.save(products: Array(productsByID.values)) } catch { /* optional: log */ }
+    
+    private func saveEvening() {
+        do {
+            let data = try JSONEncoder().encode(evening)
+            try store.save(data: data, for: .eveningRoutine)
+        } catch {
+            print("🔄 RoutineViewModel: Failed to save evening routine: \(error)")
+        }
+    }
+    
+    // MARK: - Helper Methods
+    func isProductInMorning(_ product: Product) -> Bool {
+        morning.contains { $0.id == product.id }
+    }
+    
+    func isProductInEvening(_ product: Product) -> Bool {
+        evening.contains { $0.id == product.id }
+    }
+    
+    func isProductInAnyRoutine(_ product: Product) -> Bool {
+        isProductInMorning(product) || isProductInEvening(product)
     }
 }

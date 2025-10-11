@@ -26,11 +26,3 @@ struct LocalProductAPI: ProductAPI {
 // MARK: - Hybrid Product API (Local + Open Beauty Facts)
 // Note: HybridProductAPI removed - now using ProductRepository directly
 
-// MARK: - Face Scan API (plug your backend here)
-protocol FaceScanService { func analyze(image: UIImage) async throws -> [Concern] }
-struct MockFaceScanService: FaceScanService {
-    func analyze(image: UIImage) async throws -> [Concern] {
-        // Demo: pretend detection
-        return [.redness, .oiliness]
-    }
-}

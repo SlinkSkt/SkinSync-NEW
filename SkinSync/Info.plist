@@ -8,5 +8,9 @@
 	<string>SkinSync uses your location to provide current UV index information for better skincare recommendations.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>SkinSync uses the camera to scan product barcodes and analyze your skin for personalized skincare recommendations.</string>
+	<key>OpenAI_API_Key</key>
+	<string>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</string>
+	<key>OpenUV_API_Key</key>
+	<string>openuv-2sy4amrmgcdf6jo-io</string>
 </dict>
 </plist>

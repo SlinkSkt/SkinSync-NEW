@@ -16,6 +16,8 @@ final class ProfileViewModel: ObservableObject {
         self.profile = (try? store.loadProfile())
         ?? Profile(nickname: "",
                    yearOfBirthRange: "",
+                   email: "",
+                   phoneNumber: "",
                    skinType: .normal,
                    allergies: [],
                    goals: [],
@@ -30,6 +32,8 @@ final class ProfileViewModel: ObservableObject {
         profile = Profile(
             nickname: "",
             yearOfBirthRange: "",
+            email: "",
+            phoneNumber: "",
             skinType: .normal,
             allergies: [],
             goals: [],

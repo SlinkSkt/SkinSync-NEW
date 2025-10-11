@@ -7,8 +7,6 @@ import VisionKit
 final class ScanViewModel: ObservableObject {
     // MARK: - Published Properties
     @Published var scannedProduct: Product?
-    @Published var lastFaceScan: FaceScanResult?
-    @Published var analyzingFace: Bool = false
     @Published var scannedBarcode: String?
     @Published var isScanning: Bool = false
     @Published var isTorchOn: Bool = false
@@ -27,7 +25,7 @@ final class ScanViewModel: ObservableObject {
     private let detectionThrottleInterval: TimeInterval = 2.0
     
     // MARK: - Initialization
-    init(productRepository: ProductRepository?, faceAPI: Any, store: DataStore) { 
+    init(productRepository: ProductRepository?, store: DataStore) { 
         self.store = store
         self.productRepository = productRepository
         checkDataScannerAvailability()
@@ -206,30 +204,4 @@ final class ScanViewModel: ObservableObject {
         print("🔍 ScanViewModel: Reset complete - isScanning: \(isScanning)")
     }
     
-    // MARK: - Face Analysis (Legacy)
-    func analyzeFace(image: UIImage) {
-        analyzingFace = true
-        Task {
-            let possible: [Concern] = [.acne, .redness, .dryness, .oiliness, .sensitivity]
-            let picked = Array(possible.shuffled().prefix(2)).sorted { $0.rawValue < $1.rawValue }
-
-            let result = FaceScanResult(
-                id: UUID(),
-                timestamp: Date(),
-                concerns: picked,
-                notes: nil
-            )
-
-            do {
-                var scans = try store.loadScans()
-                scans.append(result)
-                try store.save(scans: scans)
-            } catch { }
-
-            await MainActor.run {
-                self.lastFaceScan = result
-                self.analyzingFace = false
-            }
-        }
-    }
 }

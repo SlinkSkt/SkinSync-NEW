@@ -19,7 +19,6 @@ struct ScannerPage: View {
         self.productRepository = productRepository
         self._viewModel = StateObject(wrappedValue: ScanViewModel(
             productRepository: productRepository,
-            faceAPI: MockFaceAPI(),
             store: store
         ))
     }
@@ -781,10 +780,7 @@ struct DataScannerViewControllerRepresentable: UIViewControllerRepresentable {
     }
 }
 
-// MARK: - Mock Face API
-struct MockFaceAPI {
-    // Placeholder for face analysis API
-}
+// MARK: - Mock API
 
 #Preview {
     ScannerPage(

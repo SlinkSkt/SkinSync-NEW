@@ -37,6 +37,8 @@ enum Concern: String, Codable, CaseIterable, Identifiable, Hashable {
 struct Profile: Codable, Equatable {
     var nickname: String
     var yearOfBirthRange: String
+    var email: String
+    var phoneNumber: String
     var skinType: SkinType
     var allergies: [String]
     var goals: [SkinGoal]
@@ -267,15 +269,6 @@ struct Routine: Identifiable, Codable, Hashable {
     var slots: [RoutineSlot]
 }
 
-// MARK: - Face Scan
-
-/// Stores results of a face scan
-struct FaceScanResult: Identifiable, Codable, Hashable {
-    var id: UUID = UUID()
-    var timestamp: Date
-    var concerns: [Concern]
-    var notes: String?
-}
 
 // MARK: - Notifications
 

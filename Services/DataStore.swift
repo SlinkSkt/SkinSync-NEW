@@ -17,9 +17,6 @@ protocol DataStore {
     func loadRoutines() throws -> [Routine]
     func save(routines: [Routine]) throws
 
-    // Face scans
-    func loadScans() throws -> [FaceScanResult]
-    func save(scans: [FaceScanResult]) throws
 
     // Profile
     func loadProfile() throws -> Profile
@@ -36,6 +33,16 @@ protocol DataStore {
     // DataStore.swift  (add to the protocol)
     func loadFavoriteIDs() throws -> [UUID]
     func save(favoriteIDs: [UUID]) throws
+    
+    // Routine data (for new RoutineViewModel)
+    func loadData(for key: RoutineDataKey) throws -> Data?
+    func save(data: Data, for key: RoutineDataKey) throws
+}
+
+// MARK: - Routine Data Keys
+enum RoutineDataKey: String, CaseIterable {
+    case morningRoutine = "morning_routine"
+    case eveningRoutine = "evening_routine"
 }
 
 // MARK: - FileDataStore
@@ -52,6 +59,8 @@ final class FileDataStore: DataStore {
         case notif      = "notification_prefs.json"
         case daylogs    = "daylogs.json"
         case favorites  = "favorites.json"
+        case morningRoutine = "morning_routine.json"
+        case eveningRoutine = "evening_routine.json"
     }
 
     private let fm = FileManager.default
@@ -166,13 +175,6 @@ final class FileDataStore: DataStore {
         try saveEncodable(routines, name: .routines)
     }
 
-    // Face scans
-    func loadScans() throws -> [FaceScanResult] {
-        try loadArray([FaceScanResult].self, name: .scans)
-    }
-    func save(scans: [FaceScanResult]) throws {
-        try saveEncodable(scans, name: .scans)
-    }
 
     // Profile
     func loadProfile() throws -> Profile {
@@ -180,7 +182,7 @@ final class FileDataStore: DataStore {
             return try decode(Profile.self, from: url)
         }
         // sensible empty default if nothing bundled
-        return Profile(nickname: "", yearOfBirthRange: "", skinType: .normal, allergies: [], goals: [], profileIcon: "person.fill")
+        return Profile(nickname: "", yearOfBirthRange: "", email: "", phoneNumber: "", skinType: .normal, allergies: [], goals: [], profileIcon: "person.fill")
     }
     func save(profile: Profile) throws {
         try saveEncodable(profile, name: .profile)
@@ -281,5 +283,34 @@ final class FileDataStore: DataStore {
     private func decode<T: Decodable>(_ type: T.Type, from url: URL) throws -> T {
         let data = try Data(contentsOf: url)
         return try decoder.decode(T.self, from: data)
+    }
+    
+    // MARK: - Routine Data Methods
+    func loadData(for key: RoutineDataKey) throws -> Data? {
+        let fileName: FileName
+        switch key {
+        case .morningRoutine:
+            fileName = .morningRoutine
+        case .eveningRoutine:
+            fileName = .eveningRoutine
+        }
+        
+        let url = try docURL(fileName.rawValue)
+        guard fm.fileExists(atPath: url.path) else { return nil }
+        return try Data(contentsOf: url)
+    }
+    
+    func save(data: Data, for key: RoutineDataKey) throws {
+        let fileName: FileName
+        switch key {
+        case .morningRoutine:
+            fileName = .morningRoutine
+        case .eveningRoutine:
+            fileName = .eveningRoutine
+        }
+        
+        let url = try docURL(fileName.rawValue)
+        try data.write(to: url)
+        debugLog("Saved routine data for \(key.rawValue)")
     }
 }

@@ -71,13 +71,18 @@ final class ProductsViewModel: ObservableObject {
         
         do {
             let randomProducts = try await repository.fetchRandomProducts(count: 20)
-            products = randomProducts
+            
+            // Preserve favorited products when loading new random products
+            let favoritedProducts = products.filter { favoriteIDs.contains($0.id) }
+            let newProducts = randomProducts.filter { !favoriteIDs.contains($0.id) }
+            
+            products = favoritedProducts + newProducts
             debugMessage = nil
-            print("📦 ProductsViewModel: Loaded \(randomProducts.count) random products")
+            print("📦 ProductsViewModel: Loaded \(randomProducts.count) random products, preserved \(favoritedProducts.count) favorites")
         } catch {
             print("📦 ProductsViewModel: Failed to load random products: \(error)")
             debugMessage = "Failed to load products. Use search bar to find products."
-            products = []
+            // Don't clear products array on error - preserve existing favorites
         }
         
         isLoading = false
@@ -87,15 +92,20 @@ final class ProductsViewModel: ObservableObject {
     private func loadFallbackProducts() {
         print("📦 ProductsViewModel: Loading fallback products...")
         
+        // Preserve favorited products
+        let favoritedProducts = products.filter { favoriteIDs.contains($0.id) }
+        
         // Try bundle first
         if let url = Bundle.main.url(forResource: "products", withExtension: "json") {
             do {
                 let data = try Data(contentsOf: url)
                 let items = try JSONDecoder().decode([Product].self, from: data)
                 
-                products = items
+                // Combine favorited products with fallback products
+                let newProducts = items.filter { !favoriteIDs.contains($0.id) }
+                products = favoritedProducts + newProducts
                 debugMessage = "Loaded \(items.count) fallback products from bundle"
-                print("📦 ProductsViewModel: Loaded \(items.count) fallback products from bundle")
+                print("📦 ProductsViewModel: Loaded \(items.count) fallback products from bundle, preserved \(favoritedProducts.count) favorites")
                 return
             } catch {
                 print("📦 ProductsViewModel: Failed to decode fallback products from bundle: \(error)")
@@ -104,16 +114,19 @@ final class ProductsViewModel: ObservableObject {
         
         // Try Documents cache as second fallback
         if let items = try? store.loadProducts(), !items.isEmpty {
-            products = items
+            let newProducts = items.filter { !favoriteIDs.contains($0.id) }
+            products = favoritedProducts + newProducts
             debugMessage = "Loaded \(items.count) fallback products from Documents cache"
-            print("📦 ProductsViewModel: Loaded \(items.count) fallback products from Documents cache")
+            print("📦 ProductsViewModel: Loaded \(items.count) fallback products from Documents cache, preserved \(favoritedProducts.count) favorites")
             return
         }
         
         // Last resort: create test products
-        products = createTestProducts()
-        debugMessage = "Created \(products.count) test products as final fallback"
-        print("📦 ProductsViewModel: Created \(products.count) test products as final fallback")
+        let testProducts = createTestProducts()
+        let newTestProducts = testProducts.filter { !favoriteIDs.contains($0.id) }
+        products = favoritedProducts + newTestProducts
+        debugMessage = "Created \(testProducts.count) test products as final fallback"
+        print("📦 ProductsViewModel: Created \(testProducts.count) test products as final fallback, preserved \(favoritedProducts.count) favorites")
     }
     
     /// Force reload from bundle (clears Documents cache)
@@ -138,16 +151,20 @@ final class ProductsViewModel: ObservableObject {
                 // Save to Documents
                 try? store.save(products: items)
 
-                products = items
+                // Preserve favorited products when force reloading
+                let favoritedProducts = products.filter { favoriteIDs.contains($0.id) }
+                let newProducts = items.filter { !favoriteIDs.contains($0.id) }
+                products = favoritedProducts + newProducts
+                
                 debugMessage = items.isEmpty ? "Loaded 0 products from bundle." : nil
-                print("📦 ProductsViewModel: Force loaded \(items.count) products from bundle")
+                print("📦 ProductsViewModel: Force loaded \(items.count) products from bundle, preserved \(favoritedProducts.count) favorites")
             } catch {
-                products = []
+                // Don't clear products array on error - preserve existing favorites
                 debugMessage = "Decode failed: \(error.localizedDescription)"
                 print("📦 ProductsViewModel: Failed to decode products from bundle: \(error)")
             }
         } else {
-            products = []
+            // Don't clear products array - preserve existing favorites
             debugMessage = "Bundle couldn't find products.json"
             print("📦 ProductsViewModel: No products.json found in bundle")
         }
@@ -155,8 +172,11 @@ final class ProductsViewModel: ObservableObject {
         // Only create test products if bundle loading completely failed
         if products.isEmpty && debugMessage?.contains("Bundle couldn't find") == true {
             print("📦 ProductsViewModel: Bundle loading failed, creating test products...")
-            products = createTestProducts()
-            debugMessage = "Created \(products.count) test products for debugging"
+            let testProducts = createTestProducts()
+            let favoritedProducts = products.filter { favoriteIDs.contains($0.id) }
+            let newTestProducts = testProducts.filter { !favoriteIDs.contains($0.id) }
+            products = favoritedProducts + newTestProducts
+            debugMessage = "Created \(testProducts.count) test products for debugging"
         }
         
         print("📦 ProductsViewModel: Final product count: \(products.count)")
@@ -263,6 +283,12 @@ final class ProductsViewModel: ObservableObject {
             favoriteIDs.remove(product.id)
         } else {
             favoriteIDs.insert(product.id)
+            // Add the product to the products array if it's not already there
+            // This ensures scanned products appear in favorites
+            if !products.contains(where: { $0.id == product.id }) {
+                products.append(product)
+                print("📦 ProductsViewModel: Added scanned product to products array: \(product.name)")
+            }
         }
         persistFavorites()
     }

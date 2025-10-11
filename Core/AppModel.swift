@@ -24,7 +24,6 @@ struct Services {
     let dataStore: DataStore
     let imageLoader: ImageLoader
     let notif: NotificationScheduler
-    let faceScan: FaceScanService
     let productAPI: ProductAPI
     let uvService: UVIndexService
 
@@ -33,9 +32,8 @@ struct Services {
         dataStore: FileDataStore(),
         imageLoader: DefaultImageLoader(),
         notif: LocalNotificationScheduler(),
-        faceScan: MockFaceScanService(),   // This is still under dev, so replace with a real impl when ready
         productAPI: LocalProductAPI(),     // This is still under dev, so replace with a real impl when ready
-        uvService: OpenUVService(apiKey: "openuv-2sy4amrmgcdf6jo-io")  // Real OpenUV API with fallback
+        uvService: OpenUVService()  // Real OpenUV API with fallback
     )
 }
 

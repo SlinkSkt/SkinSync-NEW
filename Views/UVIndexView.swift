@@ -17,26 +17,26 @@ struct UVIndexView: View {
     }
     
     var body: some View {
-        HStack(spacing: AppTheme.Spacing.lg) {
-            // Left side - UV Index Info
-            VStack(alignment: .leading, spacing: AppTheme.Spacing.lg) {
-                // Header with UV Index and Level
-                HStack(spacing: AppTheme.Spacing.md) {
+        VStack(alignment: .leading, spacing: AppTheme.Spacing.md) {
+            // Header with UV Index and Level
+            HStack {
+                HStack(spacing: AppTheme.Spacing.sm) {
                     Image(systemName: viewModel.uvLevel.icon)
-                        .font(.title)
+                        .font(.title2)
                         .foregroundStyle(uvIndexColor)
-                        .frame(width: 32, height: 32)
+                        .frame(width: 24, height: 24)
                     
                     VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
                         if let uvIndex = viewModel.uvIndex {
                             Text("UV Index \(uvIndex, specifier: "%.1f")")
                                 .font(AppTheme.Typography.title3)
+                                .fontWeight(.semibold)
                                 .foregroundStyle(.primary)
                             
                             Text(viewModel.uvLevel.rawValue)
                                 .font(AppTheme.Typography.subheadline)
                                 .foregroundStyle(uvIndexColor)
-                                .fontWeight(.semibold)
+                                .fontWeight(.medium)
                         } else if viewModel.isLoading {
                             Text("Loading UV data...")
                                 .font(AppTheme.Typography.title3)
@@ -51,110 +51,124 @@ struct UVIndexView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
-                    
-                    if viewModel.isLoading {
-                        ProgressView()
-                            .scaleEffect(0.9)
-                    }
                 }
                 
-                // Location and Recommendation
-                if let uvIndex = viewModel.uvIndex {
-                    VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
-                        // Location info
-                        HStack(spacing: AppTheme.Spacing.xs) {
-                            Image(systemName: "location.fill")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Text(viewModel.currentCity ?? "Current location")
-                                .font(AppTheme.Typography.caption)
-                                .foregroundStyle(.secondary)
-                                .onAppear {
-                                    print("🏙️ Displaying city: \(viewModel.currentCity ?? "nil")")
-                                }
-                        }
-                        
-                        // Sunscreen recommendation
-                        HStack(spacing: AppTheme.Spacing.xs) {
-                            Image(systemName: "sun.max.fill")
-                                .font(.caption)
-                                .foregroundStyle(.orange)
-                            Text(sunscreenRecommendation(for: uvIndex))
-                                .font(AppTheme.Typography.caption)
-                                .foregroundStyle(.primary)
-                                .multilineTextAlignment(.leading)
-                                .lineLimit(2)
-                        }
-                    }
+                Spacer()
+                
+                if viewModel.isLoading {
+                    ProgressView()
+                        .scaleEffect(0.8)
                 }
             }
             
-            // Right side - Graphics
+            // UV Level Progress Line
             if let uvIndex = viewModel.uvIndex {
-                VStack(spacing: AppTheme.Spacing.lg) {
-                    // UV Index Circle
-                    ZStack {
-                        Circle()
-                            .stroke(uvIndexColor.opacity(0.2), lineWidth: 6)
-                            .frame(width: 88, height: 88)
+                VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+                    HStack {
+                        Text("Current Level")
+                            .font(AppTheme.Typography.caption)
+                            .foregroundStyle(.secondary)
                         
-                        Circle()
-                            .trim(from: 0, to: min(uvIndex / 11.0, 1.0))
-                            .stroke(uvIndexColor, style: StrokeStyle(lineWidth: 6, lineCap: .round))
-                            .frame(width: 88, height: 88)
-                            .rotationEffect(.degrees(-90))
-                            .animation(.easeInOut(duration: 1.2), value: uvIndex)
+                        Spacer()
                         
-                        VStack(spacing: AppTheme.Spacing.xs) {
-                            Text("\(Int(uvIndex))")
-                                .font(.title)
-                                .fontWeight(.bold)
-                                .foregroundStyle(uvIndexColor)
-                            Text("UV")
-                                .font(AppTheme.Typography.caption)
-                                .foregroundStyle(.secondary)
-                                .fontWeight(.medium)
-                        }
+                        Text("\(Int(uvIndex))/11")
+                            .font(AppTheme.Typography.caption)
+                            .fontWeight(.medium)
+                            .foregroundStyle(uvIndexColor)
                     }
                     
-                    // Current UV Level Indicator
-                    VStack(spacing: AppTheme.Spacing.xs) {
-                        HStack(spacing: AppTheme.Spacing.xs) {
-                            Circle()
-                                .fill(uvIndexColor)
-                                .frame(width: 10, height: 10)
-                            Text(viewModel.uvLevel.rawValue)
-                                .font(AppTheme.Typography.caption)
-                                .foregroundStyle(uvIndexColor)
-                                .fontWeight(.semibold)
+                    // Progress line
+                    GeometryReader { geometry in
+                        ZStack(alignment: .leading) {
+                            // Background line
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(Color(.quaternaryLabel))
+                                .frame(height: 8)
+                            
+                            // Progress line
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [uvIndexColor.opacity(0.7), uvIndexColor],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .frame(width: geometry.size.width * min(uvIndex / 11.0, 1.0), height: 8)
+                                .animation(.easeInOut(duration: 1.2), value: uvIndex)
                         }
-                        
-                        Text("Current Level")
-                            .font(AppTheme.Typography.caption2)
-                            .foregroundStyle(.secondary)
+                    }
+                    .frame(height: 8)
+                    
+                    // Level markers
+                    HStack {
+                        ForEach(0..<6) { index in
+                            VStack(spacing: 2) {
+                                Rectangle()
+                                    .fill(Color(.quaternaryLabel))
+                                    .frame(width: 1, height: 4)
+                                
+                                Text("\(index * 2)")
+                                    .font(.system(size: 8))
+                                    .foregroundStyle(.tertiary)
+                            }
+                            
+                            if index < 5 {
+                                Spacer()
+                            }
+                        }
                     }
                 }
             } else {
-                // Placeholder graphics when no data
-                VStack(spacing: AppTheme.Spacing.lg) {
-                    Circle()
-                        .stroke(Color(.quaternaryLabel), lineWidth: 6)
-                        .frame(width: 88, height: 88)
-                        .overlay(
-                            Image(systemName: "questionmark")
-                                .font(.title2)
-                                .foregroundStyle(.secondary)
-                        )
+                // Placeholder line when no data
+                VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+                    HStack {
+                        Text("UV Level")
+                            .font(AppTheme.Typography.caption)
+                            .foregroundStyle(.secondary)
+                        
+                        Spacer()
+                        
+                        Text("--/11")
+                            .font(AppTheme.Typography.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+                    
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(Color(.quaternaryLabel))
+                        .frame(height: 8)
+                }
+            }
+            
+            // Location and Recommendation
+            if let uvIndex = viewModel.uvIndex {
+                VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
+                    // Location info
+                    HStack(spacing: AppTheme.Spacing.xs) {
+                        Image(systemName: "location.fill")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                        
+                        Text(viewModel.currentCity ?? "Unknown location")
+                            .font(AppTheme.Typography.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    
+                    // Recommendation
+                    Text(sunscreenRecommendation(for: uvIndex))
+                        .font(AppTheme.Typography.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
                 }
             }
         }
         .padding(AppTheme.Spacing.lg)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: AppTheme.cardCornerRadius))
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: AppTheme.cardCornerRadius))
         .overlay(
             RoundedRectangle(cornerRadius: AppTheme.cardCornerRadius)
                 .stroke(uvIndexColor.opacity(0.2), lineWidth: 1)
         )
-        .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 3)
+        .shadow(color: theme.cardShadow, radius: 4, x: 0, y: 2)
         .onAppear {
             if viewModel.uvIndex == nil && !viewModel.isLoading {
                 viewModel.requestLocationAndFetchUVIndex()
@@ -163,9 +177,14 @@ struct UVIndexView: View {
             viewModel.requestLocationAndFetchCity()
         }
         .onTapGesture {
-            // Allow tapping to retry UV data fetch
+            // Allow tapping to retry UV data fetch or use mock data
             print("🔄 UV Index tapped - retrying...")
-            viewModel.requestLocationAndFetchUVIndex()
+            if viewModel.error != nil {
+                print("🧪 API failed, using mock data...")
+                viewModel.forceMockData()
+            } else {
+                viewModel.requestLocationAndFetchUVIndex()
+            }
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("UV Index: \(viewModel.uvIndex?.formatted() ?? "Loading")")
@@ -211,7 +230,7 @@ struct UVIndexView: View {
 
 #Preview {
     VStack(spacing: AppTheme.Spacing.md) {
-        UVIndexView(theme: AppTheme(config: AppConfig.default), uvService: OpenUVService(apiKey: "openuv-2sy4amrmgcdf6jo-io"))
+        UVIndexView(theme: AppTheme(config: AppConfig.default), uvService: OpenUVService())
         
         UVIndexView(theme: AppTheme(config: AppConfig.default), uvService: MockUVIndexService())
     }

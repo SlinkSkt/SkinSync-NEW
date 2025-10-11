@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ProfileView: View {
     @EnvironmentObject private var vm: ProfileViewModel
-    @EnvironmentObject private var routineVM: RoutineViewModel
+    @EnvironmentObject private var notificationVM: NotificationViewModel
     let theme: AppTheme
     @Environment(\.dismiss) private var dismiss
     
@@ -17,6 +17,42 @@ struct ProfileView: View {
     @State private var showingReminders = false
     @State private var showingResetAlert = false
     @State private var showingIconPicker = false
+    @State private var showingColorSchemePicker = false
+    @State private var showingEditProfile = false
+    @State private var showingGoalsEditor = false
+    @State private var showingAllergiesEditor = false
+    
+    // MARK: - Computed Properties
+    
+    @AppStorage("colorScheme") private var selectedColorScheme: String = "system"
+    
+    private var colorSchemeText: String {
+        switch selectedColorScheme {
+        case "light":
+            return "Light Mode"
+        case "dark":
+            return "Dark Mode"
+        default:
+            return "System"
+        }
+    }
+    
+    private var colorSchemeIcon: String {
+        switch selectedColorScheme {
+        case "light":
+            return "sun.max.fill"
+        case "dark":
+            return "moon.fill"
+        default:
+            return "circle.lefthalf.filled"
+        }
+    }
+    
+    private var appVersionText: String {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+        return "\(version) (\(build))"
+    }
     
     var body: some View {
         NavigationStack {
@@ -40,6 +76,9 @@ struct ProfileView: View {
                     // App Settings
                     appSettingsSection
                     
+                    // About & Support
+                    aboutSupportSection
+                    
                     // Danger Zone
                     dangerZoneSection
                 }
@@ -60,7 +99,7 @@ struct ProfileView: View {
         }
         .sheet(isPresented: $showingReminders) {
             RemindersSettingsView()
-                .environmentObject(routineVM)
+                .environmentObject(notificationVM)
         }
         .alert("Reset All Data", isPresented: $showingResetAlert) {
             Button("Cancel", role: .cancel) { }
@@ -75,6 +114,18 @@ struct ProfileView: View {
                 get: { vm.profile.profileIcon },
                 set: { vm.profile.profileIcon = $0; vm.save() }
             ))
+        }
+        .sheet(isPresented: $showingColorSchemePicker) {
+            ColorSchemePickerView()
+        }
+        .sheet(isPresented: $showingEditProfile) {
+            EditProfileView(profile: $vm.profile, theme: theme)
+        }
+        .sheet(isPresented: $showingGoalsEditor) {
+            GoalsEditorView(goals: $vm.profile.goals, theme: theme)
+        }
+        .sheet(isPresented: $showingAllergiesEditor) {
+            AllergiesEditorView(allergies: $vm.profile.allergies, theme: theme)
         }
     }
     
@@ -135,7 +186,7 @@ struct ProfileView: View {
                         icon: "pencil",
                         color: theme.primary
                     ) {
-                        // Edit profile action
+                        showingEditProfile = true
                     }
                     
                     QuickActionCard(
@@ -143,7 +194,7 @@ struct ProfileView: View {
                         icon: "target",
                         color: .blue
                     ) {
-                        // Goals action
+                        showingGoalsEditor = true
                     }
                     
                     QuickActionCard(
@@ -151,7 +202,7 @@ struct ProfileView: View {
                         icon: "exclamationmark.triangle",
                         color: .orange
                     ) {
-                        // Allergies action
+                        showingAllergiesEditor = true
                     }
                     
                     QuickActionCard(
@@ -186,13 +237,35 @@ struct ProfileView: View {
                 )
                 
                 ProfileField(
-                    title: "Birth Year Range",
+                    title: "Email",
                     value: Binding(
-                        get: { vm.profile.yearOfBirthRange },
-                        set: { vm.profile.yearOfBirthRange = $0; vm.save() }
+                        get: { vm.profile.email },
+                        set: { vm.profile.email = $0; vm.save() }
                     ),
-                    placeholder: "e.g. 2001-2005"
+                    placeholder: "Enter your email"
                 )
+                
+                ProfileField(
+                    title: "Phone Number",
+                    value: Binding(
+                        get: { vm.profile.phoneNumber },
+                        set: { vm.profile.phoneNumber = $0; vm.save() }
+                    ),
+                    placeholder: "Enter your phone number"
+                )
+                
+                VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+                    Text("Birth Year")
+                        .font(AppTheme.Typography.subheadline)
+                        .foregroundStyle(.secondary)
+                    
+                    Text(vm.profile.yearOfBirthRange.isEmpty ? "Not set" : vm.profile.yearOfBirthRange)
+                        .font(AppTheme.Typography.body)
+                        .foregroundStyle(.primary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(AppTheme.Spacing.md)
+                        .background(Color(.quaternaryLabel).opacity(0.3), in: RoundedRectangle(cornerRadius: AppTheme.smallCornerRadius))
+                }
             }
         }
         .padding(AppTheme.Spacing.lg)
@@ -344,28 +417,81 @@ struct ProfileView: View {
                 .foregroundStyle(.primary)
             
             VStack(spacing: AppTheme.Spacing.md) {
+                // Color Scheme Indicator
+                Button {
+                    showingColorSchemePicker = true
+                } label: {
+                    HStack {
+                        VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
+                            Text("Color Scheme")
+                                .font(AppTheme.Typography.subheadline)
+                                .foregroundStyle(.secondary)
+                            Text(colorSchemeText)
+                                .font(AppTheme.Typography.body)
+                                .foregroundStyle(.primary)
+                        }
+                        
+                        Spacer()
+                        
+                        HStack(spacing: AppTheme.Spacing.sm) {
+                            Image(systemName: colorSchemeIcon)
+                                .font(.title2)
+                                .foregroundStyle(theme.primary)
+                            
+                            Image(systemName: "chevron.right")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(AppTheme.Spacing.md)
+                    .background(Color(.quaternaryLabel).opacity(0.2), in: RoundedRectangle(cornerRadius: AppTheme.smallCornerRadius))
+                }
+                .buttonStyle(.plain)
+                
+                // Theme Preview
                 HStack {
                     VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
-                        Text("Theme Color")
+                        Text("Theme Preview")
                             .font(AppTheme.Typography.subheadline)
                             .foregroundStyle(.secondary)
-                        Text("Olive Green")
+                        Text("Current Theme Colors")
                             .font(AppTheme.Typography.body)
                             .foregroundStyle(.primary)
                     }
                     
                     Spacer()
                     
-                    Circle()
-                        .fill(theme.primary)
-                        .frame(width: 24, height: 24)
-                        .overlay(
-                            Circle()
-                                .stroke(Color(.quaternaryLabel), lineWidth: 1)
-                        )
+                    HStack(spacing: AppTheme.Spacing.sm) {
+                        // Primary Color
+                        Circle()
+                            .fill(theme.primary)
+                            .frame(width: 20, height: 20)
+                            .overlay(
+                                Circle()
+                                    .stroke(Color(.quaternaryLabel), lineWidth: 1)
+                            )
+                        
+                        // Success Color
+                        Circle()
+                            .fill(theme.success)
+                            .frame(width: 20, height: 20)
+                            .overlay(
+                                Circle()
+                                    .stroke(Color(.quaternaryLabel), lineWidth: 1)
+                            )
+                        
+                        // Info Color
+                        Circle()
+                            .fill(theme.info)
+                            .frame(width: 20, height: 20)
+                            .overlay(
+                                Circle()
+                                    .stroke(Color(.quaternaryLabel), lineWidth: 1)
+                            )
+                    }
                 }
                 .padding(AppTheme.Spacing.md)
-                        .background(Color(.quaternaryLabel).opacity(0.2), in: RoundedRectangle(cornerRadius: AppTheme.smallCornerRadius))
+                .background(Color(.quaternaryLabel).opacity(0.2), in: RoundedRectangle(cornerRadius: AppTheme.smallCornerRadius))
                 
                 Button {
                     showingReminders = true
@@ -379,9 +505,116 @@ struct ProfileView: View {
                             .foregroundStyle(.secondary)
                     }
                     .padding(AppTheme.Spacing.md)
-                        .background(Color(.quaternaryLabel).opacity(0.2), in: RoundedRectangle(cornerRadius: AppTheme.smallCornerRadius))
+                    .background(Color(.quaternaryLabel).opacity(0.2), in: RoundedRectangle(cornerRadius: AppTheme.smallCornerRadius))
                 }
                 .buttonStyle(.plain)
+            }
+        }
+        .padding(AppTheme.Spacing.lg)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: AppTheme.cardCornerRadius))
+        .shadow(color: theme.cardShadow, radius: 4, x: 0, y: 2)
+    }
+    
+    // MARK: - About & Support Section
+    
+    private var aboutSupportSection: some View {
+        VStack(alignment: .leading, spacing: AppTheme.Spacing.lg) {
+            Label("About & Support", systemImage: "info.circle")
+                .font(AppTheme.Typography.title)
+                .foregroundStyle(.primary)
+            
+            VStack(spacing: AppTheme.Spacing.md) {
+                // About SkinSync
+                VStack(alignment: .leading, spacing: AppTheme.Spacing.md) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
+                            Text("About SkinSync")
+                                .font(AppTheme.Typography.subheadline)
+                                .foregroundStyle(.secondary)
+                            Text("AI-Powered Skincare Assistant")
+                                .font(AppTheme.Typography.body)
+                                .foregroundStyle(.primary)
+                        }
+                        
+                        Spacer()
+                        
+                        Image(systemName: "sparkles")
+                            .font(.title2)
+                            .foregroundStyle(theme.primary)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+                        Text("SkinSync revolutionizes skincare with AI-powered analysis, personalized routines, and intelligent product recommendations. Track your skin's journey, discover products that work for you, and build healthy habits with our comprehensive skincare ecosystem.")
+                            .font(AppTheme.Typography.callout)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.leading)
+                        
+                        VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
+                            Text("Key Features:")
+                                .font(AppTheme.Typography.caption)
+                                .foregroundStyle(.secondary)
+                                .fontWeight(.semibold)
+                            
+                            Text("• AI-powered skin analysis and recommendations")
+                                .font(AppTheme.Typography.caption)
+                                .foregroundStyle(.secondary)
+                            Text("• Personalized morning and evening routines")
+                                .font(AppTheme.Typography.caption)
+                                .foregroundStyle(.secondary)
+                            Text("• Product scanning and ingredient analysis")
+                                .font(AppTheme.Typography.caption)
+                                .foregroundStyle(.secondary)
+                            Text("• UV index tracking and sun protection alerts")
+                                .font(AppTheme.Typography.caption)
+                                .foregroundStyle(.secondary)
+                            Text("• Smart notifications and habit tracking")
+                                .font(AppTheme.Typography.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                .padding(AppTheme.Spacing.md)
+                .background(Color(.quaternaryLabel).opacity(0.2), in: RoundedRectangle(cornerRadius: AppTheme.smallCornerRadius))
+                
+                // App Version
+                HStack {
+                    VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
+                        Text("App Version")
+                            .font(AppTheme.Typography.subheadline)
+                            .foregroundStyle(.secondary)
+                        Text(appVersionText)
+                            .font(AppTheme.Typography.body)
+                            .foregroundStyle(.primary)
+                    }
+                    
+                    Spacer()
+                    
+                    Image(systemName: "app.badge")
+                        .font(.title2)
+                        .foregroundStyle(theme.primary)
+                }
+                .padding(AppTheme.Spacing.md)
+                .background(Color(.quaternaryLabel).opacity(0.2), in: RoundedRectangle(cornerRadius: AppTheme.smallCornerRadius))
+                
+                // Credits
+                HStack {
+                    VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
+                        Text("Credits")
+                            .font(AppTheme.Typography.subheadline)
+                            .foregroundStyle(.secondary)
+                        Text("Developed with RMIT STEM STUDENTS - 2025")
+                            .font(AppTheme.Typography.body)
+                            .foregroundStyle(.primary)
+                    }
+                    
+                    Spacer()
+                    
+                    Image(systemName: "heart.fill")
+                        .font(.title2)
+                        .foregroundStyle(.red)
+                }
+                .padding(AppTheme.Spacing.md)
+                .background(Color(.quaternaryLabel).opacity(0.2), in: RoundedRectangle(cornerRadius: AppTheme.smallCornerRadius))
             }
         }
         .padding(AppTheme.Spacing.lg)
@@ -529,6 +762,58 @@ private struct IconPickerView: View {
                 .padding(AppTheme.Spacing.lg)
             }
             .navigationTitle("Choose Icon")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Color Scheme Picker View
+
+struct ColorSchemePickerView: View {
+    @Environment(\.dismiss) private var dismiss
+    @AppStorage("colorScheme") private var selectedColorScheme: String = "system"
+    
+    private let colorSchemes = [
+        ("system", "System", "circle.lefthalf.filled"),
+        ("light", "Light Mode", "sun.max.fill"),
+        ("dark", "Dark Mode", "moon.fill")
+    ]
+    
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach(colorSchemes, id: \.0) { scheme in
+                    Button {
+                        selectedColorScheme = scheme.0
+                        dismiss()
+                    } label: {
+                        HStack {
+                            Image(systemName: scheme.2)
+                                .foregroundStyle(.primary)
+                                .frame(width: 24)
+                            
+                            Text(scheme.1)
+                                .foregroundStyle(.primary)
+                            
+                            Spacer()
+                            
+                            if selectedColorScheme == scheme.0 {
+                                Image(systemName: "checkmark")
+                                    .foregroundStyle(.blue)
+                            }
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .navigationTitle("Color Scheme")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
