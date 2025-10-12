@@ -5,7 +5,7 @@
 	<key>CLIENT_ID</key>
 	<string>786908588123-ogfa9h7clsml8ci6ehh0rasr01hp62te.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.786908588123-ogfa9h7clsml8ci6ehh0rasr01hp62te</string>
+	<string>com.googleusercontent.apps.786908588123-529iagi2rdml5n34l5n4j03rp7sot0nm</string>
 	<key>API_KEY</key>
 	<string>AIzaSyCny3mMVv3PbYOwl266upkL-YMJNmepns8</string>
 	<key>GCM_SENDER_ID</key>
@@ -13,22 +13,22 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>Test.SkinSync113</string>
+	<string>Test.SkinSync114</string>
 	<key>PROJECT_ID</key>
 	<string>skinsync-322f8</string>
 	<key>STORAGE_BUCKET</key>
 	<string>skinsync-322f8.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
-	<false></false>
+	<false/>
 	<key>IS_ANALYTICS_ENABLED</key>
-	<false></false>
+	<false/>
 	<key>IS_APPINVITE_ENABLED</key>
-	<true></true>
+	<true/>
 	<key>IS_GCM_ENABLED</key>
-	<true></true>
+	<true/>
 	<key>IS_SIGNIN_ENABLED</key>
-	<true></true>
+	<true/>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:786908588123:ios:40986ec7a49e93ffa6f77e</string>
+	<string>1:786908588123:ios:b8b434e154fddbd8a6f77e</string>
 </dict>
 </plist>
