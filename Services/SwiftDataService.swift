@@ -37,13 +37,7 @@ final class SwiftDataService {
             
             // Enable auto-save
             modelContext.autosaveEnabled = true
-            
-            print("✅ SwiftDataService: Initialized successfully")
         } catch {
-            // Log error instead of crashing
-            print("❌ SwiftDataService: Failed to initialize ModelContainer: \(error)")
-            print("❌ SwiftDataService: Attempting recovery with in-memory store...")
-            
             // Fallback to in-memory store
             do {
                 let schema = Schema([
@@ -65,10 +59,8 @@ final class SwiftDataService {
                 
                 self.modelContext = ModelContext(modelContainer)
                 modelContext.autosaveEnabled = true
-                
-                print("⚠️ SwiftDataService: Running with in-memory store (data will not persist)")
             } catch {
-                fatalError("❌ SwiftDataService: Fatal error - cannot initialize even in-memory store: \(error)")
+                fatalError("SwiftDataService: Fatal error - cannot initialize even in-memory store: \(error)")
             }
         }
     }
@@ -100,8 +92,6 @@ final class SwiftDataService {
                 return newConversation.id
             }
         } catch {
-            print("❌ SwiftDataService: Error fetching conversation: \(error)")
-            // Fallback to a default UUID
             return UUID()
         }
     }
@@ -119,9 +109,7 @@ final class SwiftDataService {
                 conversation.messageCount = messageCount
                 try modelContext.save()
             }
-        } catch {
-            print("❌ SwiftDataService: Error updating conversation: \(error)")
-        }
+        } catch { }
     }
     
     // MARK: - Chat History Management
@@ -133,10 +121,7 @@ final class SwiftDataService {
         
         do {
             try modelContext.save()
-            print("💾 SwiftDataService: Saved message \(message.id)")
-        } catch {
-            print("❌ SwiftDataService: Failed to save message: \(error)")
-        }
+        } catch { }
     }
     
     /// Load all messages for a conversation
@@ -148,10 +133,8 @@ final class SwiftDataService {
         
         do {
             let entities = try modelContext.fetch(descriptor)
-            print("📖 SwiftDataService: Loaded \(entities.count) messages")
             return entities.map { $0.toChatMessage() }
         } catch {
-            print("❌ SwiftDataService: Failed to load messages: \(error)")
             return []
         }
     }
@@ -168,10 +151,7 @@ final class SwiftDataService {
                 modelContext.delete(entity)
             }
             try modelContext.save()
-            print("🗑️ SwiftDataService: Deleted \(entities.count) messages")
-        } catch {
-            print("❌ SwiftDataService: Failed to delete messages: \(error)")
-        }
+        } catch { }
     }
     
     /// Delete old messages (older than specified days)
@@ -188,10 +168,7 @@ final class SwiftDataService {
                 modelContext.delete(entity)
             }
             try modelContext.save()
-            print("🗑️ SwiftDataService: Deleted \(entities.count) old messages")
-        } catch {
-            print("❌ SwiftDataService: Failed to delete old messages: \(error)")
-        }
+        } catch { }
     }
     
     /// Get message count for a conversation
@@ -204,7 +181,6 @@ final class SwiftDataService {
             let entities = try modelContext.fetch(descriptor)
             return entities.count
         } catch {
-            print("❌ SwiftDataService: Failed to get message count: \(error)")
             return 0
         }
     }
@@ -220,19 +196,15 @@ final class SwiftDataService {
         do {
             let settings = try modelContext.fetch(descriptor)
             if let existing = settings.first {
-                print("📖 SwiftDataService: Loaded existing settings")
                 return existing
             } else {
                 // Create default settings
                 let newSettings = AppSettingsEntity()
                 modelContext.insert(newSettings)
                 try modelContext.save()
-                print("✨ SwiftDataService: Created default settings")
                 return newSettings
             }
         } catch {
-            print("❌ SwiftDataService: Failed to load settings: \(error)")
-            // Return default settings without saving
             return AppSettingsEntity()
         }
     }
@@ -243,10 +215,7 @@ final class SwiftDataService {
         
         do {
             try modelContext.save()
-            print("💾 SwiftDataService: Saved settings")
-        } catch {
-            print("❌ SwiftDataService: Failed to save settings: \(error)")
-        }
+        } catch { }
     }
     
     /// Update specific setting
@@ -267,7 +236,6 @@ final class SwiftDataService {
             
             return (messages: messageCount, conversations: conversationCount, settings: settingsCount)
         } catch {
-            print("❌ SwiftDataService: Failed to get storage stats: \(error)")
             return (messages: 0, conversations: 0, settings: 0)
         }
     }
@@ -285,10 +253,7 @@ final class SwiftDataService {
             try modelContext.delete(model: AppSettingsEntity.self)
             
             try modelContext.save()
-            print("🗑️ SwiftDataService: Cleared all data")
-        } catch {
-            print("❌ SwiftDataService: Failed to clear data: \(error)")
-        }
+        } catch { }
     }
 }
 

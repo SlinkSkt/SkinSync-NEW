@@ -23,7 +23,6 @@ final class RoutineViewModel: ObservableObject {
         self.store = store
         self.productRepository = productRepository
         self.routineService = routineService
-        print("🔄 RoutineViewModel: Initialized")
         
         // Load from local storage first
         Task {
@@ -33,48 +32,38 @@ final class RoutineViewModel: ObservableObject {
     
     // MARK: - Loading
     func load() async {
-        print("🔄 RoutineViewModel: Loading routines...")
-        
         // Load morning routine
         if let morningData = try? store.loadData(for: .morningRoutine),
            let morningProducts = try? JSONDecoder().decode([Product].self, from: morningData) {
             morning = morningProducts
-            print("🔄 RoutineViewModel: Loaded \(morningProducts.count) morning products")
         }
         
         // Load evening routine
         if let eveningData = try? store.loadData(for: .eveningRoutine),
            let eveningProducts = try? JSONDecoder().decode([Product].self, from: eveningData) {
             evening = eveningProducts
-            print("🔄 RoutineViewModel: Loaded \(eveningProducts.count) evening products")
         }
-        
-        print("🔄 RoutineViewModel: Load complete - Morning: \(morning.count), Evening: \(evening.count)")
     }
     
     // MARK: - Add Products
     func addToMorning(_ product: Product) {
         // Prevent duplicates
         guard !morning.contains(where: { $0.id == product.id }) else {
-            print("🔄 RoutineViewModel: Product already in morning routine")
             return
         }
         
         morning.append(product)
         saveMorning()
-        print("🔄 RoutineViewModel: Added '\(product.name)' to morning routine")
     }
     
     func addToEvening(_ product: Product) {
         // Prevent duplicates
         guard !evening.contains(where: { $0.id == product.id }) else {
-            print("🔄 RoutineViewModel: Product already in evening routine")
             return
         }
         
         evening.append(product)
         saveEvening()
-        print("🔄 RoutineViewModel: Added '\(product.name)' to evening routine")
     }
     
     // MARK: - Reorder Products
@@ -83,7 +72,6 @@ final class RoutineViewModel: ObservableObject {
         // Filter out any invalid indices that might have been produced by gesture math
         let validSource = IndexSet(source.filter { $0 >= 0 && $0 < snapshot.count })
         guard !validSource.isEmpty else {
-            print("🔄 RoutineViewModel: moveMorning skipped — empty/invalid source: \(source)")
             return
         }
         // Clamp destination to a valid insertion point [0...count]
@@ -92,7 +80,6 @@ final class RoutineViewModel: ObservableObject {
         snapshot.move(fromOffsets: validSource, toOffset: clampedDestination)
         morning = snapshot
         saveMorning()
-        print("🔄 RoutineViewModel: Reordered morning routine (source: \(Array(validSource)), dest: \(clampedDestination))")
     }
     
     func moveEvening(from source: IndexSet, to destination: Int) {
@@ -100,7 +87,6 @@ final class RoutineViewModel: ObservableObject {
         // Filter out any invalid indices that might have been produced by gesture math
         let validSource = IndexSet(source.filter { $0 >= 0 && $0 < snapshot.count })
         guard !validSource.isEmpty else {
-            print("🔄 RoutineViewModel: moveEvening skipped — empty/invalid source: \(source)")
             return
         }
         // Clamp destination to a valid insertion point [0...count]
@@ -109,20 +95,17 @@ final class RoutineViewModel: ObservableObject {
         snapshot.move(fromOffsets: validSource, toOffset: clampedDestination)
         evening = snapshot
         saveEvening()
-        print("🔄 RoutineViewModel: Reordered evening routine (source: \(Array(validSource)), dest: \(clampedDestination))")
     }
     
     // MARK: - Remove Products
     func removeFromMorning(_ product: Product) {
         morning.removeAll { $0.id == product.id }
         saveMorning()
-        print("🔄 RoutineViewModel: Removed '\(product.name)' from morning routine")
     }
     
     func removeFromEvening(_ product: Product) {
         evening.removeAll { $0.id == product.id }
         saveEvening()
-        print("🔄 RoutineViewModel: Removed '\(product.name)' from evening routine")
     }
     
     // MARK: - Drag State Management
@@ -131,7 +114,6 @@ final class RoutineViewModel: ObservableObject {
             draggingProduct = product
             isDragging = true
         }
-        print("🔄 RoutineViewModel: Started dragging '\(product.name)'")
     }
     
     func endDragging() {
@@ -139,7 +121,6 @@ final class RoutineViewModel: ObservableObject {
             draggingProduct = nil
             isDragging = false
         }
-        print("🔄 RoutineViewModel: Ended dragging")
     }
     
     // MARK: - Persistence
@@ -150,9 +131,7 @@ final class RoutineViewModel: ObservableObject {
             if Auth.auth().currentUser != nil {
                 saveRoutineToCloud()
             }
-        } catch {
-            print("🔄 RoutineViewModel: Failed to save morning routine: \(error)")
-        }
+        } catch { }
     }
     
     private func saveEvening() {
@@ -162,9 +141,7 @@ final class RoutineViewModel: ObservableObject {
             
             if Auth.auth().currentUser != nil {
                 saveRoutineToCloud() }
-        } catch {
-            print("🔄 RoutineViewModel: Failed to save evening routine: \(error)")
-        }
+        } catch { }
     }
     
     // MARK: - Helper Methods
@@ -182,7 +159,6 @@ final class RoutineViewModel: ObservableObject {
     // MARK: - Cloud Save
     func saveRoutineToCloud() {
         guard let user = Auth.auth().currentUser else {
-            print("RoutineViewModel: save skipped, no signed-in user")
             return
         }
         let payload = RoutinePayload(
@@ -206,14 +182,10 @@ final class RoutineViewModel: ObservableObject {
             },
             updatedAt: Date()
         )
-        print("RoutineViewModel: saving… morning=\(payload.morning.count), evening=\(payload.evening.count)")
         Task {
             do {
                 try await routineService.save(userId: user.uid, payload: payload)
-                print("RoutineViewModel: save OK")
-            } catch {
-                print("RoutineViewModel: save FAILED → \(error)")
-            }
+            } catch { }
         }
     }
     
@@ -237,8 +209,6 @@ final class RoutineViewModel: ObservableObject {
                 self.morning = am
                 self.evening = pm
             }
-        } catch {
-            print("RoutineViewModel: cloud load failed → \(error)")
-        }
+        } catch { }
     }
 }

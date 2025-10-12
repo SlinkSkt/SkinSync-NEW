@@ -33,7 +33,6 @@ struct ProductsScreen: View {
         case .category: base.sorted { $0.category.localizedCaseInsensitiveCompare($1.category) == .orderedAscending }
         }
         
-        print("📱 ProductsScreen: visibleProducts = \(sorted.count) (favorites: \(showOnlyFavourites), query: '\(vm.query)', total: \(vm.products.count))")
         return sorted
     }
 

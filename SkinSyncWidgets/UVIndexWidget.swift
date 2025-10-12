@@ -55,13 +55,9 @@ struct UVWidgetProvider: TimelineProvider {
     private func fetchUVData() async -> UVWidgetEntry {
         // Try to read from shared UserDefaults
         if let sharedDefaults = UserDefaults(suiteName: "group.com.skinsync.app") {
-            print("🔍 Widget: Attempting to read from shared UserDefaults")
-            
             if let uvIndex = sharedDefaults.object(forKey: "lastUVIndex") as? Double {
                 let cityName = sharedDefaults.string(forKey: "lastCity")
                 let (level, color) = getUVLevelAndColor(uvIndex)
-                
-                print("✅ Widget: Found UV data - UV: \(uvIndex), City: \(cityName ?? "Unknown")")
                 
                 return UVWidgetEntry(
                     date: Date(),
@@ -70,15 +66,10 @@ struct UVWidgetProvider: TimelineProvider {
                     uvColor: color,
                     cityName: cityName
                 )
-            } else {
-                print("⚠️ Widget: No UV data found in shared UserDefaults")
             }
-        } else {
-            print("❌ Widget: Failed to access shared UserDefaults")
         }
         
         // Fallback to default
-        print("ℹ️ Widget: Using fallback (no data)")
         return UVWidgetEntry(
             date: Date(),
             uvIndex: nil,

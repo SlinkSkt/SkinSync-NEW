@@ -9,7 +9,7 @@ import Foundation
 import FirebaseFirestore
 
 protocol FavoriteServicing {
-    func load(userId: String) async throws -> [String]
+    func load(userId: String) async throws -> (ids: [String], items: [[String: Any]])
     func save(userId: String, ids: [String], items: [[String: Any]]) async throws
 }
 
@@ -20,9 +20,11 @@ final class FavoritesService: FavoriteServicing {
         db.collection("users").document(userId).collection("favorites").document("list")
     }
 
-    func load(userId: String) async throws -> [String] {
+    func load(userId: String) async throws -> (ids: [String], items: [[String: Any]]) {
         let snap = try await doc(userId).getDocument()
-        return (snap.data()?["ids"] as? [String]) ?? []
+        let ids = (snap.data()?["ids"] as? [String]) ?? []
+        let items = (snap.data()?["items"] as? [[String: Any]]) ?? []
+        return (ids: ids, items: items)
     }
 
     // NEW: write both ids and a richer items array

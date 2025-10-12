@@ -90,8 +90,6 @@ final class SettingsViewModel: ObservableObject {
         _analyticsEnabled = Published(initialValue: settings.analyticsEnabled)
         
         isLoadingSettings = false
-        
-        print("📖 SettingsViewModel: Loaded settings")
     }
     
     private func saveSettings() {
@@ -111,8 +109,6 @@ final class SettingsViewModel: ObservableObject {
             settings.maxChatHistoryDays = self.maxChatHistoryDays
             settings.analyticsEnabled = self.analyticsEnabled
         }
-        
-        print("💾 SettingsViewModel: Saved settings")
     }
     
     // MARK: - Utility Methods
@@ -135,8 +131,6 @@ final class SettingsViewModel: ObservableObject {
         
         isLoadingSettings = false
         saveSettings()
-        
-        print("🔄 SettingsViewModel: Reset to defaults")
     }
     
     func getStorageStats() -> String {
@@ -150,7 +144,6 @@ final class SettingsViewModel: ObservableObject {
     
     func cleanupOldChatHistory() {
         swiftDataService.deleteOldMessages(olderThanDays: maxChatHistoryDays)
-        print("🧹 SettingsViewModel: Cleaned up old chat history")
     }
 }
 

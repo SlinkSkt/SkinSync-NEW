@@ -25,6 +25,7 @@
 		FF608B172E9BAD59006E0773 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FF608AF92E9BACCB006E0773 /* WidgetKit.framework */; };
 		FF608B182E9BAD59006E0773 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FF608AFB2E9BACCB006E0773 /* SwiftUI.framework */; };
 		FF608B292E9BAD5B006E0773 /* SkinSyncWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = FF608B162E9BAD59006E0773 /* SkinSyncWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		FF608BB22E9BD642006E0773 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FF608BB12E9BD641006E0773 /* XCTest.framework */; platformFilter = ios; };
 		FF6D2FB42E9AB09900AB353D /* SyncAIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF6D2FB32E9AB09900AB353D /* SyncAIView.swift */; };
 		FF6D2FB62E9AB3FA00AB353D /* OpenAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF6D2FB52E9AB3FA00AB353D /* OpenAIService.swift */; };
 		FF6D2FB82E9AB40600AB353D /* SyncAIViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF6D2FB72E9AB40600AB353D /* SyncAIViewModel.swift */; };
@@ -59,8 +60,6 @@
 		FFE900F62E91658300DDC574 /* UVIndexViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFE900F52E91658300DDC574 /* UVIndexViewModel.swift */; };
 		FFE900F82E91659000DDC574 /* UVIndexView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFE900F72E91659000DDC574 /* UVIndexView.swift */; };
 		FFE901BA2E98775200DDC574 /* ProductDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFE901B92E98775200DDC574 /* ProductDetailViewModel.swift */; };
-		FFE901BF2E987C5700DDC574 /* TimelineViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFE901BD2E987C5700DDC574 /* TimelineViewModel.swift */; };
-		FFE901C02E987C5700DDC574 /* ViewModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFE901BE2E987C5700DDC574 /* ViewModels.swift */; };
 		FFE901C22E987C6700DDC574 /* AssetOrRemoteImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFE901C12E987C6700DDC574 /* AssetOrRemoteImage.swift */; };
 		FFE901C42E98C98300DDC574 /* ProductRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFE901C32E98C98300DDC574 /* ProductRepository.swift */; };
 /* End PBXBuildFile section */
@@ -72,6 +71,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = FF608B152E9BAD59006E0773;
 			remoteInfo = SkinSyncWidgetsExtension;
+		};
+		FF608B7C2E9BD429006E0773 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FF935A9E2E62031100D412DD /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FF935AA52E62031200D412DD;
+			remoteInfo = SkinSync;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -104,6 +110,8 @@
 		FF608AFB2E9BACCB006E0773 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		FF608B162E9BAD59006E0773 /* SkinSyncWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SkinSyncWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		FF608B302E9BAE08006E0773 /* SkinSyncWidgetsExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SkinSyncWidgetsExtension.entitlements; sourceTree = "<group>"; };
+		FF608B782E9BD428006E0773 /* SkinSyncTest.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SkinSyncTest.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		FF608BB12E9BD641006E0773 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Platforms/iPhoneOS.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		FF6D2FB32E9AB09900AB353D /* SyncAIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncAIView.swift; sourceTree = "<group>"; };
 		FF6D2FB52E9AB3FA00AB353D /* OpenAIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIService.swift; sourceTree = "<group>"; };
 		FF6D2FB72E9AB40600AB353D /* SyncAIViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncAIViewModel.swift; sourceTree = "<group>"; };
@@ -139,8 +147,6 @@
 		FFE900F52E91658300DDC574 /* UVIndexViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UVIndexViewModel.swift; sourceTree = "<group>"; };
 		FFE900F72E91659000DDC574 /* UVIndexView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UVIndexView.swift; sourceTree = "<group>"; };
 		FFE901B92E98775200DDC574 /* ProductDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductDetailViewModel.swift; sourceTree = "<group>"; };
-		FFE901BD2E987C5700DDC574 /* TimelineViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineViewModel.swift; sourceTree = "<group>"; };
-		FFE901BE2E987C5700DDC574 /* ViewModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModels.swift; sourceTree = "<group>"; };
 		FFE901C12E987C6700DDC574 /* AssetOrRemoteImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssetOrRemoteImage.swift; sourceTree = "<group>"; };
 		FFE901C32E98C98300DDC574 /* ProductRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductRepository.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -171,6 +177,11 @@
 			path = SkinSyncWidgets;
 			sourceTree = "<group>";
 		};
+		FF608B792E9BD428006E0773 /* SkinSyncTest */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SkinSyncTest;
+			sourceTree = "<group>";
+		};
 		FF935AA82E62031200D412DD /* SkinSync */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -188,6 +199,14 @@
 			files = (
 				FF608B182E9BAD59006E0773 /* SwiftUI.framework in Frameworks */,
 				FF608B172E9BAD59006E0773 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FF608B752E9BD428006E0773 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FF608BB22E9BD642006E0773 /* XCTest.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -209,6 +228,7 @@
 		FF608AF82E9BACCB006E0773 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				FF608BB12E9BD641006E0773 /* XCTest.framework */,
 				FF608AF92E9BACCB006E0773 /* WidgetKit.framework */,
 				FF608AFB2E9BACCB006E0773 /* SwiftUI.framework */,
 			);
@@ -228,6 +248,7 @@
 				FF935B022E62056200D412DD /* Views */,
 				FF935AA82E62031200D412DD /* SkinSync */,
 				FF608B192E9BAD59006E0773 /* SkinSyncWidgets */,
+				FF608B792E9BD428006E0773 /* SkinSyncTest */,
 				FF608AF82E9BACCB006E0773 /* Frameworks */,
 				FF935AA72E62031200D412DD /* Products */,
 			);
@@ -238,6 +259,7 @@
 			children = (
 				FF935AA62E62031200D412DD /* SkinSync.app */,
 				FF608B162E9BAD59006E0773 /* SkinSyncWidgetsExtension.appex */,
+				FF608B782E9BD428006E0773 /* SkinSyncTest.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -305,8 +327,6 @@
 				F5476B2B2E9B227100656F06 /* AuthViewModel.swift */,
 				FF6D2FB72E9AB40600AB353D /* SyncAIViewModel.swift */,
 				FF70F3842E9A33C000728BC5 /* NotificationViewModel.swift */,
-				FFE901BD2E987C5700DDC574 /* TimelineViewModel.swift */,
-				FFE901BE2E987C5700DDC574 /* ViewModels.swift */,
 				FFE901B92E98775200DDC574 /* ProductDetailViewModel.swift */,
 				FFE900F52E91658300DDC574 /* UVIndexViewModel.swift */,
 				FF935B372E62D37A00D412DD /* ScanViewModel.swift */,
@@ -364,6 +384,29 @@
 			productReference = FF608B162E9BAD59006E0773 /* SkinSyncWidgetsExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		FF608B772E9BD428006E0773 /* SkinSyncTest */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FF608B7E2E9BD429006E0773 /* Build configuration list for PBXNativeTarget "SkinSyncTest" */;
+			buildPhases = (
+				FF608B742E9BD428006E0773 /* Sources */,
+				FF608B752E9BD428006E0773 /* Frameworks */,
+				FF608B762E9BD428006E0773 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FF608B7D2E9BD429006E0773 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				FF608B792E9BD428006E0773 /* SkinSyncTest */,
+			);
+			name = SkinSyncTest;
+			packageProductDependencies = (
+			);
+			productName = SkinSyncTest;
+			productReference = FF608B782E9BD428006E0773 /* SkinSyncTest.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		FF935AA52E62031200D412DD /* SkinSync */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = FF935AB12E62031300D412DD /* Build configuration list for PBXNativeTarget "SkinSync" */;
@@ -406,6 +449,10 @@
 					FF608B152E9BAD59006E0773 = {
 						CreatedOnToolsVersion = 16.4;
 					};
+					FF608B772E9BD428006E0773 = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = FF935AA52E62031200D412DD;
+					};
 					FF935AA52E62031200D412DD = {
 						CreatedOnToolsVersion = 16.4;
 					};
@@ -431,12 +478,20 @@
 			targets = (
 				FF935AA52E62031200D412DD /* SkinSync */,
 				FF608B152E9BAD59006E0773 /* SkinSyncWidgetsExtension */,
+				FF608B772E9BD428006E0773 /* SkinSyncTest */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		FF608B142E9BAD59006E0773 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FF608B762E9BD428006E0773 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -455,6 +510,13 @@
 
 /* Begin PBXSourcesBuildPhase section */
 		FF608B122E9BAD59006E0773 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FF608B742E9BD428006E0773 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -483,9 +545,7 @@
 				FF935B322E62D34A00D412DD /* RoutineViewModel.swift in Sources */,
 				FF935B0E2E620D2900D412DD /* NotificationScheduler.swift in Sources */,
 				FF935B062E62056200D412DD /* ImageLoader.swift in Sources */,
-				FFE901BF2E987C5700DDC574 /* TimelineViewModel.swift in Sources */,
 				F5476B352E9B530600656F06 /* RoutineService.swift in Sources */,
-				FFE901C02E987C5700DDC574 /* ViewModels.swift in Sources */,
 				FF935B772E63481200D412DD /* ProductDetailView.swift in Sources */,
 				FF935B072E62056200D412DD /* AppModel.swift in Sources */,
 				FF935B102E620D4700D412DD /* APIs.swift in Sources */,
@@ -522,6 +582,11 @@
 			isa = PBXTargetDependency;
 			target = FF608B152E9BAD59006E0773 /* SkinSyncWidgetsExtension */;
 			targetProxy = FF608B272E9BAD5B006E0773 /* PBXContainerItemProxy */;
+		};
+		FF608B7D2E9BD429006E0773 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FF935AA52E62031200D412DD /* SkinSync */;
+			targetProxy = FF608B7C2E9BD429006E0773 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -579,6 +644,42 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		FF608B7F2E9BD429006E0773 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = L85BJKH5DQ;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Test.SkinSync114.SkinSyncTest;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SkinSync.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SkinSync";
+			};
+			name = Debug;
+		};
+		FF608B802E9BD429006E0773 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = L85BJKH5DQ;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Test.SkinSync114.SkinSyncTest;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SkinSync.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SkinSync";
 			};
 			name = Release;
 		};
@@ -773,6 +874,15 @@
 			buildConfigurations = (
 				FF608B2B2E9BAD5B006E0773 /* Debug */,
 				FF608B2C2E9BAD5B006E0773 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FF608B7E2E9BD429006E0773 /* Build configuration list for PBXNativeTarget "SkinSyncTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FF608B7F2E9BD429006E0773 /* Debug */,
+				FF608B802E9BD429006E0773 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

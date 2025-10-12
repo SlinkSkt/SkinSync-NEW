@@ -41,12 +41,12 @@ final class UVIndexViewModel: NSObject, ObservableObject {
     // MARK: - Public Methods
     
     func testWithFallbackLocation() {
-        print("🧪 Testing UV API with fallback location...")
+        print("Testing UV API with fallback location...")
         fetchUVIndexWithFallback()
     }
     
     func forceMockData() {
-        print("🧪 Forcing mock UV data...")
+        print("Forcing mock UV data...")
         let mockLocation = CLLocation(latitude: -33.8688, longitude: 151.2093)
         Task {
             await fetchMockData(for: mockLocation)
@@ -55,33 +55,33 @@ final class UVIndexViewModel: NSObject, ObservableObject {
     
     func requestLocationAndFetchCity() {
         guard let location = locationManager.location else {
-            print("📍 No location available for geocoding")
+            print("No location available for geocoding")
             return
         }
         
         Task {
-            print("🌍 Manually requesting city for location: \(location.coordinate)")
+            print("Manually requesting city for location: \(location.coordinate)")
             await getCityName(from: location)
         }
     }
     
     func requestLocationAndFetchUVIndex() {
-        print("📍 Requesting location and UV data...")
-        print("📍 Location services enabled: \(CLLocationManager.locationServicesEnabled())")
+        print("Requesting location and UV data...")
+        print("Location services enabled: \(CLLocationManager.locationServicesEnabled())")
         
         guard CLLocationManager.locationServicesEnabled() else {
-            print("❌ Location services disabled")
+            print("Location services disabled")
             error = .locationUnavailable
             return
         }
         
         // Check current authorization status first
         let currentStatus = locationManager.authorizationStatus
-        print("📍 Current authorization status: \(currentStatus.rawValue)")
+        print("Current authorization status: \(currentStatus.rawValue)")
         
         switch currentStatus {
         case .notDetermined:
-            print("📍 Authorization not determined, requesting permission...")
+            print("Authorization not determined, requesting permission...")
             // Set up to handle the authorization request
             // The delegate will be called when authorization changes
             isLoading = true
@@ -92,14 +92,14 @@ final class UVIndexViewModel: NSObject, ObservableObject {
             // This is the recommended approach per Apple's documentation
             locationManager.requestWhenInUseAuthorization()
         case .denied, .restricted:
-            print("❌ Location permission denied or restricted")
+            print("Location permission denied or restricted")
             error = .locationPermissionDenied
             isLoading = false
         case .authorizedWhenInUse, .authorizedAlways:
-            print("✅ Location permission granted, fetching UV data...")
+            print("Location permission granted, fetching UV data...")
             fetchUVIndexWithFallback()
         @unknown default:
-            print("❌ Unknown location authorization status")
+            print("Unknown location authorization status")
             error = .locationUnavailable
             isLoading = false
         }
@@ -111,41 +111,41 @@ final class UVIndexViewModel: NSObject, ObservableObject {
     private func setupLocationManager() {
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyKilometer
-        print("📍 Location manager setup complete")
+        print("Location manager setup complete")
     }
     
     private func fetchUVIndex() {
         guard let location = locationManager.location else {
-            print("❌ No location available for UV fetch, starting location updates...")
+            print("No location available for UV fetch, starting location updates...")
             locationManager.startUpdatingLocation()
             error = .locationUnavailable
             return
         }
         
-        print("🌍 Fetching UV data for location: \(location.coordinate)")
+        print("Fetching UV data for location: \(location.coordinate)")
         isLoading = true
         error = nil
         
         Task {
             do {
-                print("🔄 Starting UV API call...")
+                print("Starting UV API call...")
                 let result = try await uvService.fetchUVIndex(for: location)
-                print("✅ UV API call successful, UV index: \(result.uv)")
+                print("UV API call successful, UV index: \(result.uv)")
                 
                 await MainActor.run {
                     self.uvIndex = result.uv
                     self.lastUpdated = Date()
                     self.isLoading = false
                     self.cacheData()
-                    print("✅ UV data updated in UI")
+                    print("UV data updated in UI")
                 }
                 
                 // Get city name from location
-                print("🌍 Starting geocoding for location: \(location.coordinate)")
+                print("Starting geocoding for location: \(location.coordinate)")
                 await getCityName(from: location)
             } catch {
-                print("❌ UV fetch error: \(error.localizedDescription)")
-                print("🔄 Falling back to mock data...")
+                print("UV fetch error: \(error.localizedDescription)")
+                print("Falling back to mock data...")
                 await fetchMockData(for: location)
             }
         }
@@ -157,7 +157,7 @@ final class UVIndexViewModel: NSObject, ObservableObject {
             fetchUVIndex()
         } else {
             // Fallback to Sydney coordinates for testing
-            print("🔄 Using fallback location (Sydney) for UV data...")
+            print("Using fallback location (Sydney) for UV data...")
             let fallbackLocation = CLLocation(latitude: -33.8688, longitude: 151.2093)
             
             isLoading = true
@@ -165,9 +165,9 @@ final class UVIndexViewModel: NSObject, ObservableObject {
             
             Task {
                 do {
-                    print("🔄 Starting UV API call with fallback location...")
+                    print("Starting UV API call with fallback location...")
                     let result = try await uvService.fetchUVIndex(for: fallbackLocation)
-                    print("✅ UV API call successful with fallback, UV index: \(result.uv)")
+                    print("UV API call successful with fallback, UV index: \(result.uv)")
                     
                     await MainActor.run {
                         self.uvIndex = result.uv
@@ -175,11 +175,11 @@ final class UVIndexViewModel: NSObject, ObservableObject {
                         self.isLoading = false
                         self.cacheData()
                         self.currentCity = "Sydney, Australia"
-                        print("✅ UV data updated in UI with fallback location")
+                        print("UV data updated in UI with fallback location")
                     }
                 } catch {
-                    print("❌ UV fetch error with fallback: \(error.localizedDescription)")
-                    print("🔄 Falling back to mock data...")
+                    print("UV fetch error with fallback: \(error.localizedDescription)")
+                    print("Falling back to mock data...")
                     await fetchMockData(for: fallbackLocation)
                 }
             }
@@ -187,11 +187,11 @@ final class UVIndexViewModel: NSObject, ObservableObject {
     }
     
     private func fetchMockData(for location: CLLocation) async {
-        print("🧪 Fetching mock UV data for location: \(location.coordinate)")
+        print("Fetching mock UV data for location: \(location.coordinate)")
         
         do {
             let result = try await mockService.fetchUVIndex(for: location)
-            print("✅ Mock UV data successful, UV index: \(result.uv)")
+            print("Mock UV data successful, UV index: \(result.uv)")
             
             await MainActor.run {
                 self.uvIndex = result.uv
@@ -199,17 +199,17 @@ final class UVIndexViewModel: NSObject, ObservableObject {
                 self.isLoading = false
                 self.error = nil
                 self.cacheData()
-                print("✅ Mock UV data updated in UI")
+                print("Mock UV data updated in UI")
             }
             
             // Get city name from location
             await getCityName(from: location)
         } catch {
-            print("❌ Mock UV fetch error: \(error.localizedDescription)")
+            print("Mock UV fetch error: \(error.localizedDescription)")
             await MainActor.run {
                 self.error = error as? UVIndexError ?? .networkError(error)
                 self.isLoading = false
-                print("❌ Mock error set in UI: \(self.error?.localizedDescription ?? "Unknown")")
+                print("Mock error set in UI: \(self.error?.localizedDescription ?? "Unknown")")
             }
         }
     }
@@ -228,16 +228,16 @@ final class UVIndexViewModel: NSObject, ObservableObject {
                                   "Unknown Location"
                     
                     self.currentCity = cityName
-                    print("📍 Geocoded city: \(cityName)")
+                    print("Geocoded city: \(cityName)")
                 } else {
                     self.currentCity = "Unknown Location"
-                    print("📍 No placemarks found")
+                    print("No placemarks found")
                 }
             }
         } catch {
             await MainActor.run {
                 self.currentCity = "Unknown Location"
-                print("📍 Geocoding error: \(error.localizedDescription)")
+                print("Geocoding error: \(error.localizedDescription)")
             }
         }
     }
@@ -262,7 +262,7 @@ final class UVIndexViewModel: NSObject, ObservableObject {
         // Always try to get current city name, even with cached UV data
         if let location = locationManager.location {
             Task {
-                print("🌍 Loading cached data, getting city for location: \(location.coordinate)")
+                print("Loading cached data, getting city for location: \(location.coordinate)")
                 await getCityName(from: location)
             }
         }
@@ -296,17 +296,17 @@ final class UVIndexViewModel: NSObject, ObservableObject {
             
             // Verify the data was saved
             if let savedUV = sharedDefaults?.object(forKey: "lastUVIndex") as? Double {
-                print("✅ Saved UV data to shared UserDefaults for widget: \(savedUV)")
+                print("Saved UV data to shared UserDefaults for widget: \(savedUV)")
             } else {
-                print("⚠️ Failed to save UV data to shared UserDefaults")
+                print("Failed to save UV data to shared UserDefaults")
             }
             
             // Reload widget timelines
             WidgetCenter.shared.reloadAllTimelines()
-            print("🔄 Triggered widget refresh")
+            print("Triggered widget refresh")
         } catch {
             // Cache error - not critical
-            print("⚠️ Failed to cache UV data: \(error)")
+            print("Failed to cache UV data: \(error)")
         }
     }
 }
@@ -316,7 +316,7 @@ final class UVIndexViewModel: NSObject, ObservableObject {
 extension UVIndexViewModel: CLLocationManagerDelegate {
     nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         Task { @MainActor in
-            print("📍 Location updated: \(locations.first?.coordinate ?? CLLocationCoordinate2D())")
+            print("Location updated: \(locations.first?.coordinate ?? CLLocationCoordinate2D())")
             // Stop location updates to save battery
             manager.stopUpdatingLocation()
             fetchUVIndex()
@@ -332,21 +332,21 @@ extension UVIndexViewModel: CLLocationManagerDelegate {
     
     nonisolated func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         Task { @MainActor in
-            print("📍 Authorization status changed to: \(status.rawValue)")
+            print("Authorization status changed to: \(status.rawValue)")
             switch status {
             case .authorizedWhenInUse, .authorizedAlways:
-                print("✅ Location permission granted, fetching UV data...")
+                print("Location permission granted, fetching UV data...")
                 fetchUVIndexWithFallback()
             case .denied, .restricted:
-                print("❌ Location permission denied or restricted")
+                print("Location permission denied or restricted")
                 self.error = .locationPermissionDenied
                 self.isLoading = false
             case .notDetermined:
-                print("⏳ Still waiting for user decision")
+                print("Still waiting for user decision")
                 // Still waiting for user decision
                 break
             @unknown default:
-                print("❌ Unknown authorization status")
+                print("Unknown authorization status")
                 self.error = .locationUnavailable
                 self.isLoading = false
             }

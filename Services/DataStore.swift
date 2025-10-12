@@ -1,8 +1,3 @@
-// https://developer.apple.com/documentation/swiftdata/datastore
-// https://docs.swift.org/swift-book/documentation/the-swift-programming-language/generics/ - Zhen Xiao 20/8/2025
-// https://developer.apple.com/documentation/foundation/jsondecoder
-// !!!!!!!!!! FACE SCAN ---- STILL UNDER DEVELOPMENT, PLEASE EXCLUDE THIS FROM THE ASSESSMENT 1  --- !!!!!!!!!!
-// To help VM with data store, They only talk to protocol. datastore define a storage layer of the app - NOTE __ZHEN XIAO
 import Foundation
 
 // MARK: - DataStore protocol
@@ -64,13 +59,6 @@ final class FileDataStore: DataStore {
     }
 
     private let fm = FileManager.default
-
-    // Debug-only logging helper (won't spam Release builds)
-    private func debugLog(_ message: String) {
-        #if DEBUG
-        print(message)
-        #endif
-    }
    
     // MARK: Public seeding (optional)
     /// Call once on launch to ensure sample JSON exists in Documents.
@@ -83,14 +71,12 @@ final class FileDataStore: DataStore {
             if !fm.fileExists(atPath: prodURL.path) {
                 if let src = bundledURL(FileName.products.rawValue) {
                     try fm.copyItem(at: src, to: prodURL)
-                    debugLog("Seeded products.json from bundle")
                 } else {
                     // If no bundle file, create empty array
                     try save(products: [])
-                    debugLog("Created empty products.json")
                 }
             }
-        } catch { debugLog("Products seed error: \(error)") }
+        } catch { }
 
         // Seed routines
         do {
@@ -98,7 +84,6 @@ final class FileDataStore: DataStore {
             if !fm.fileExists(atPath: routinesURL.path) {
                 if let src = bundledURL(FileName.routines.rawValue) {
                     try fm.copyItem(at: src, to: routinesURL)
-                    debugLog("Seeded routines.json from bundle")
                 } else {
                     // Create sensible defaults if nothing bundled
                     let defaultRoutines = [
@@ -121,10 +106,9 @@ final class FileDataStore: DataStore {
                         )
                     ]
                     try save(routines: defaultRoutines)
-                    debugLog("Created default routines.json")
                 }
             }
-        } catch { debugLog("Routines seed error: \(error)") }
+        } catch { }
 
         // Other JSON files (scans, profile, notif, daylogs)
         for name in [FileName.scans, .profile, .notif, .daylogs] {
@@ -133,11 +117,8 @@ final class FileDataStore: DataStore {
                 guard !fm.fileExists(atPath: dst.path) else { continue }
                 if let src = bundledURL(name.rawValue) {
                     try fm.copyItem(at: src, to: dst)
-                    debugLog("Seeded \(name.rawValue) from bundle")
                 }
-            } catch {
-                debugLog("Seed error \(name.rawValue): \(error)")
-            }
+            } catch { }
         }
         // Seed favourites (create empty file if none exists in bundle)
         do {
@@ -145,13 +126,11 @@ final class FileDataStore: DataStore {
             if !fm.fileExists(atPath: favURL.path) {
                 if let src = bundledURL(FileName.favorites.rawValue) {
                     try fm.copyItem(at: src, to: favURL)
-                    debugLog("Seeded favorites.json from bundle")
                 } else {
                     try save(favoriteIDs: [])
-                    debugLog("Created empty favorites.json")
                 }
             }
-        } catch { debugLog("Favourites seed error: \(error)") }
+        } catch { }
     }
 
     // MARK: - DataStore conformance
@@ -240,7 +219,6 @@ final class FileDataStore: DataStore {
         let url = try docURL(name.rawValue)
         if fm.fileExists(atPath: url.path) {
             try fm.removeItem(at: url)
-            debugLog("🗑️ Deleted \(name.rawValue) from Documents")
         }
     }
 
@@ -311,6 +289,5 @@ final class FileDataStore: DataStore {
         
         let url = try docURL(fileName.rawValue)
         try data.write(to: url)
-        debugLog("Saved routine data for \(key.rawValue)")
     }
 }

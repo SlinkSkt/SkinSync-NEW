@@ -73,12 +73,10 @@ struct ScannerPage: View {
         }
         .sheet(isPresented: $showingProductDetail, onDismiss: {
             // Reset scanner when sheet is dismissed
-            print("🔍 ScannerPage: Sheet dismissed, resetting scanner")
             viewModel.reset()
             
             // Small delay to ensure reset completes before starting
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                print("🔍 ScannerPage: Starting scanner after reset")
                 viewModel.startScanning()
             }
         }) {
@@ -116,7 +114,6 @@ struct ScannerPage: View {
                     }
                     .onAppear {
                         // Ensure products are loaded when presented from scanner
-                        print("🔍 ScannerPage: ProductsScreen appeared, ensuring products are loaded")
                         Task {
                             await productsVM.loadAsync()
                         }
@@ -742,7 +739,6 @@ struct DataScannerViewControllerRepresentable: UIViewControllerRepresentable {
                     if let payload = barcode.payloadStringValue,
                        !detectedBarcodes.contains(payload) {
                         detectedBarcodes.insert(payload)
-                        print("🔍 DataScanner: Auto-detected barcode: \(payload)")
                         onBarcodeDetected(payload)
                     }
                 default:
@@ -756,7 +752,6 @@ struct DataScannerViewControllerRepresentable: UIViewControllerRepresentable {
             switch item {
             case .barcode(let barcode):
                 if let payload = barcode.payloadStringValue {
-                    print("🔍 DataScanner: Tapped barcode: \(payload)")
                     onBarcodeDetected(payload)
                 }
             default:

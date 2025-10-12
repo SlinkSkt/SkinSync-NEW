@@ -25,7 +25,6 @@ final class NotificationViewModel: ObservableObject {
                 pmHour: 21, 
                 pmMinute: 0
             )
-        print("🔔 NotificationViewModel: Initialized with AM: \(notif.enableAM), PM: \(notif.enablePM)")
     }
     
     // MARK: - Notification Messages
@@ -69,7 +68,6 @@ final class NotificationViewModel: ObservableObject {
                     minute: prefs.amMinute,
                     body: getRandomMessage(isMorning: true)
                 )
-                print("🔔 NotificationViewModel: Scheduled morning reminder at \(prefs.amHour):\(String(format: "%02d", prefs.amMinute))")
             }
             
             if prefs.enablePM {
@@ -79,19 +77,13 @@ final class NotificationViewModel: ObservableObject {
                     minute: prefs.pmMinute,
                     body: getRandomMessage(isMorning: false)
                 )
-                print("🔔 NotificationViewModel: Scheduled evening reminder at \(prefs.pmHour):\(String(format: "%02d", prefs.pmMinute))")
             }
-            
-            print("🔔 NotificationViewModel: Applied notification preferences")
-        } catch {
-            print("🔔 NotificationViewModel: Failed to apply notification preferences: \(error)")
-        }
+        } catch { }
     }
     
     // MARK: - Permission Management
     func requestNotificationPermission() async -> Bool {
         let granted = await scheduler.requestAuth()
-        print("🔔 NotificationViewModel: Notification permission \(granted ? "granted" : "denied")")
         return granted
     }
     

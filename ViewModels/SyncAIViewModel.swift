@@ -45,7 +45,6 @@ class SyncAIViewModel: ObservableObject {
         conversationID = swiftDataService.getCurrentConversationID()
         let loadedMessages = swiftDataService.loadMessages(conversationID: conversationID)
         messages = loadedMessages
-        print("📖 SyncAIViewModel: Loaded \(loadedMessages.count) messages from history")
     }
     
     private func saveMessageToHistory(_ message: ChatMessage) {
@@ -63,14 +62,12 @@ class SyncAIViewModel: ObservableObject {
         
         if !enabled {
             // Clear local messages but don't delete from SwiftData
-            print("🔒 SyncAIViewModel: Chat history disabled")
         } else {
             // Reload messages from SwiftData
             loadChatHistory()
             if messages.isEmpty {
                 addWelcomeMessage()
             }
-            print("🔓 SyncAIViewModel: Chat history enabled")
         }
     }
     

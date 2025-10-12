@@ -195,24 +195,18 @@ class OpenBeautyFactsRepository: ProductRepository {
             throw APIError.invalidURL
         }
 
-        print("🔍 ProductRepository: CGI search URL: \(finalURL)")
-
         do {
             let (data, response) = try await session.data(from: finalURL)
 
             guard let httpResponse = response as? HTTPURLResponse,
                   httpResponse.statusCode == 200 else {
-                print("🔍 ProductRepository: Search failed with status: \((response as? HTTPURLResponse)?.statusCode ?? -1)")
                 throw APIError.invalidResponse
             }
-
-            print("🔍 ProductRepository: Search response size: \(data.count) bytes")
 
             // The API returns a dictionary with products array
             let searchResponse = try JSONDecoder().decode(OBFSearchResponse.self, from: data)
 
             guard let obfProducts = searchResponse.products, !obfProducts.isEmpty else {
-                print("🔍 ProductRepository: No products in search response")
                 return []
             }
 
@@ -220,15 +214,12 @@ class OpenBeautyFactsRepository: ProductRepository {
                 try? convertToProduct(from: obfProduct)
             }
 
-            print("🔍 ProductRepository: CGI search found \(products.count) products for query '\(query)'")
-
             // Cache the search results
             await cacheProducts(products)
 
             return products
 
         } catch {
-            print("🔍 ProductRepository: Search error: \(error)")
             throw APIError.networkError(error)
         }
     }
@@ -239,35 +230,26 @@ class OpenBeautyFactsRepository: ProductRepository {
         guard !barcode.isEmpty else { return nil }
         
         let url = URL(string: "\(baseURL)/product/\(barcode).json")!
-        print("🔍 ProductRepository: Fetching barcode: \(barcode)")
         
         do {
             let (data, response) = try await session.data(from: url)
             
             guard let httpResponse = response as? HTTPURLResponse else {
-                print("🔍 ProductRepository: Invalid HTTP response")
                 throw APIError.invalidResponse
             }
-            
-            print("🔍 ProductRepository: HTTP status: \(httpResponse.statusCode)")
             
             // Allow 200 (success) and 404 (not found) - both are valid responses
             guard httpResponse.statusCode == 200 || httpResponse.statusCode == 404 else {
-                print("🔍 ProductRepository: Unexpected HTTP status: \(httpResponse.statusCode)")
                 throw APIError.invalidResponse
             }
-            
-            print("🔍 ProductRepository: Barcode response size: \(data.count) bytes")
             
             let obfResponse = try JSONDecoder().decode(OBFProductResponse.self, from: data)
             
             guard obfResponse.status == 1, let obfProduct = obfResponse.product else {
-                print("🔍 ProductRepository: Product not found for barcode: \(barcode)")
                 return nil
             }
             
             let product = try convertToProduct(from: obfProduct)
-            print("🔍 ProductRepository: Found product: \(product.name)")
             
             // Cache the product
             await cacheProduct(product)
@@ -275,7 +257,6 @@ class OpenBeautyFactsRepository: ProductRepository {
             return product
             
         } catch {
-            print("🔍 ProductRepository: Barcode fetch error: \(error)")
             throw APIError.networkError(error)
         }
     }
@@ -288,8 +269,6 @@ class OpenBeautyFactsRepository: ProductRepository {
         
         // Pick a random term
         let randomTerm = beautyTerms.randomElement() ?? "beauty"
-        
-        print("🔍 ProductRepository: Fetching random products using term: '\(randomTerm)'")
         
         // Use the search method with a random beauty term
         return try await search(query: randomTerm, page: 1, pageSize: count)
@@ -308,10 +287,7 @@ class OpenBeautyFactsRepository: ProductRepository {
             }
             
             try store.save(products: cachedProducts)
-            print("🔍 ProductRepository: Cached \(products.count) products")
-        } catch {
-            print("🔍 ProductRepository: Failed to cache products: \(error)")
-        }
+        } catch { }
     }
     
     private func cacheProduct(_ product: Product) async {
@@ -325,10 +301,7 @@ class OpenBeautyFactsRepository: ProductRepository {
             }
             
             try store.save(products: cachedProducts)
-            print("🔍 ProductRepository: Cached product: \(product.name)")
-        } catch {
-            print("🔍 ProductRepository: Failed to cache product: \(error)")
-        }
+        } catch { }
     }
     
     // MARK: - Product Conversion

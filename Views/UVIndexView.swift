@@ -204,9 +204,7 @@ struct UVIndexView: View {
         }
         .onTapGesture {
             // Allow tapping to retry UV data fetch or use mock data
-            print("🔄 UV Index tapped - retrying...")
             if viewModel.error != nil {
-                print("🧪 API failed, using mock data...")
                 viewModel.forceMockData()
             } else {
                 viewModel.requestLocationAndFetchUVIndex()

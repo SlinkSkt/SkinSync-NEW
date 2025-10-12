@@ -30,8 +30,6 @@ final class ProductsViewModel: ObservableObject {
         if let user = Auth.auth().currentUser {
             Task { await loadFavoritesFromCloud(userId: user.uid) }
         }
-
-        print("📦 ProductsViewModel: Initialized with ProductRepository: \(productRepository != nil ? "YES" : "NO")")
     }
 
     /// Convenience entry point for Views (non-async).
@@ -47,20 +45,15 @@ final class ProductsViewModel: ObservableObject {
     /// Clear Documents cache completely
     func clearDocumentsCache() {
         Task {
-            print("📦 ProductsViewModel: Clearing Documents cache...")
             try? store.deleteProducts()
-            print("📦 ProductsViewModel: Documents cache cleared")
         }
     }
 
     /// Async-friendly loader ( for tests or future expansion).
     func loadAsync() async {
-        print("📦 ProductsViewModel: Starting to load products...")
-        
         // Load favorites first so hearts show immediately
         let favs = (try? store.loadFavoriteIDs()) ?? []
         favoriteIDs = Set(favs)
-        print("📦 ProductsViewModel: Loaded \(favoriteIDs.count) favorites")
 
         // Load random products to populate the page
         await loadRandomProducts()
@@ -68,7 +61,6 @@ final class ProductsViewModel: ObservableObject {
     
     func loadRandomProducts() async {
         guard let repository = productRepository else {
-            print("📦 ProductsViewModel: No ProductRepository available for random products")
             debugMessage = "No API available. Use search bar to find products."
             return
         }
@@ -85,9 +77,7 @@ final class ProductsViewModel: ObservableObject {
             
             products = favoritedProducts + newProducts
             debugMessage = nil
-            print("📦 ProductsViewModel: Loaded \(randomProducts.count) random products, preserved \(favoritedProducts.count) favorites")
         } catch {
-            print("📦 ProductsViewModel: Failed to load random products: \(error)")
             debugMessage = "Failed to load products. Use search bar to find products."
             // Don't clear products array on error - preserve existing favorites
         }
@@ -97,8 +87,6 @@ final class ProductsViewModel: ObservableObject {
     
     /// Load fallback products only when needed (API fails or no results)
     private func loadFallbackProducts() {
-        print("📦 ProductsViewModel: Loading fallback products...")
-        
         // Preserve favorited products
         let favoritedProducts = products.filter { favoriteIDs.contains($0.id) }
         
@@ -112,11 +100,8 @@ final class ProductsViewModel: ObservableObject {
                 let newProducts = items.filter { !favoriteIDs.contains($0.id) }
                 products = favoritedProducts + newProducts
                 debugMessage = "Loaded \(items.count) fallback products from bundle"
-                print("📦 ProductsViewModel: Loaded \(items.count) fallback products from bundle, preserved \(favoritedProducts.count) favorites")
                 return
-            } catch {
-                print("📦 ProductsViewModel: Failed to decode fallback products from bundle: \(error)")
-            }
+            } catch { }
         }
         
         // Try Documents cache as second fallback
@@ -124,7 +109,6 @@ final class ProductsViewModel: ObservableObject {
             let newProducts = items.filter { !favoriteIDs.contains($0.id) }
             products = favoritedProducts + newProducts
             debugMessage = "Loaded \(items.count) fallback products from Documents cache"
-            print("📦 ProductsViewModel: Loaded \(items.count) fallback products from Documents cache, preserved \(favoritedProducts.count) favorites")
             return
         }
         
@@ -133,21 +117,16 @@ final class ProductsViewModel: ObservableObject {
         let newTestProducts = testProducts.filter { !favoriteIDs.contains($0.id) }
         products = favoritedProducts + newTestProducts
         debugMessage = "Created \(testProducts.count) test products as final fallback"
-        print("📦 ProductsViewModel: Created \(testProducts.count) test products as final fallback, preserved \(favoritedProducts.count) favorites")
     }
     
     /// Force reload from bundle (clears Documents cache)
     func forceReloadFromBundleAsync() async {
-        print("📦 ProductsViewModel: Force reloading from bundle...")
-        
         // Load favorites first
         let favs = (try? store.loadFavoriteIDs()) ?? []
         favoriteIDs = Set(favs)
-        print("📦 ProductsViewModel: Loaded \(favoriteIDs.count) favorites")
 
         // Clear Documents cache by deleting the products file
         try? store.deleteProducts()
-        print("📦 ProductsViewModel: Cleared Documents cache")
 
         // Load from bundle
         if let url = Bundle.main.url(forResource: "products", withExtension: "json") {
@@ -164,41 +143,67 @@ final class ProductsViewModel: ObservableObject {
                 products = favoritedProducts + newProducts
                 
                 debugMessage = items.isEmpty ? "Loaded 0 products from bundle." : nil
-                print("📦 ProductsViewModel: Force loaded \(items.count) products from bundle, preserved \(favoritedProducts.count) favorites")
             } catch {
                 // Don't clear products array on error - preserve existing favorites
                 debugMessage = "Decode failed: \(error.localizedDescription)"
-                print("📦 ProductsViewModel: Failed to decode products from bundle: \(error)")
             }
         } else {
             // Don't clear products array - preserve existing favorites
             debugMessage = "Bundle couldn't find products.json"
-            print("📦 ProductsViewModel: No products.json found in bundle")
         }
         
         // Only create test products if bundle loading completely failed
         if products.isEmpty && debugMessage?.contains("Bundle couldn't find") == true {
-            print("📦 ProductsViewModel: Bundle loading failed, creating test products...")
             let testProducts = createTestProducts()
             let favoritedProducts = products.filter { favoriteIDs.contains($0.id) }
             let newTestProducts = testProducts.filter { !favoriteIDs.contains($0.id) }
             products = favoritedProducts + newTestProducts
             debugMessage = "Created \(testProducts.count) test products for debugging"
         }
-        
-        print("📦 ProductsViewModel: Final product count: \(products.count)")
     }
     private func loadFavoritesFromCloud(userId: String) async {
         do {
-            let idStrings = try await favoritesService.load(userId: userId)
+            let (idStrings, itemsData) = try await favoritesService.load(userId: userId)
             let ids = Set(idStrings.compactMap(UUID.init(uuidString:)))
+            
+            // Reconstruct Product objects from the items data
+            var favoriteProducts: [Product] = []
+            for itemDict in itemsData {
+                guard let idString = itemDict["id"] as? String,
+                      let id = UUID(uuidString: idString),
+                      let name = itemDict["name"] as? String,
+                      let brand = itemDict["brand"] as? String,
+                      let category = itemDict["category"] as? String,
+                      let barcode = itemDict["barcode"] as? String else {
+                    continue
+                }
+                
+                let product = Product(
+                    id: id,
+                    name: name,
+                    brand: brand,
+                    category: category,
+                    assetName: "",
+                    concerns: [],
+                    ingredients: [],
+                    barcode: barcode
+                )
+                favoriteProducts.append(product)
+            }
+            
             await MainActor.run {
                 self.favoriteIDs = ids
+                // Add favorite products to the products array if they're not already there
+                for product in favoriteProducts {
+                    if !self.products.contains(where: { $0.id == product.id }) {
+                        self.products.append(product)
+                    }
+                }
+                
+                // Save favorite IDs to local storage as well
+                try? self.store.save(favoriteIDs: Array(ids))
             }
-            // print("Favorites: cloud load OK (\(ids.count))")
-        } catch {
-            print("Favorites: cloud load failed → \(error)")
-        }
+        } catch { }
     }
 
 
@@ -239,28 +244,22 @@ final class ProductsViewModel: ObservableObject {
     // MARK: - Derived collections
 
     var filtered: [Product] {
-        print("🔍 Filtered called with query: '\(query)', products count: \(products.count), searchResults count: \(searchResults.count)")
-        
         guard !query.isEmpty else { 
-            print("🔍 Search: Empty query, returning \(products.count) random products")
             return products 
         }
         
         let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !q.isEmpty else { 
-            print("🔍 Search: Empty trimmed query, returning empty results")
             return [] 
         }
         
         // If we have search results from API, return them
         if !searchResults.isEmpty {
-            print("🔍 Search: Returning \(searchResults.count) API search results")
             return searchResults
         }
         
         // Only load fallback products if API has failed
         if hasAPIFailed && products.isEmpty {
-            print("🔍 Search: API failed and no local products, loading fallback products...")
             loadFallbackProducts()
         }
         
@@ -272,23 +271,12 @@ final class ProductsViewModel: ObservableObject {
                 let categoryMatch = $0.category.localizedCaseInsensitiveContains(q)
                 let barcodeMatch = $0.barcode.localizedCaseInsensitiveContains(q)
                 
-                let matches = nameMatch || brandMatch || categoryMatch || barcodeMatch
-                if matches {
-                    print("🔍 Fallback match found: '\($0.name)' matches '\(q)'")
-                }
-                
-                return matches
-            }
-            
-            print("🔍 Search: '\(q)' found \(results.count) fallback results out of \(products.count) products")
-            if results.isEmpty {
-                print("🔍 Search: No fallback matches found. Sample product names: \(products.prefix(3).map { $0.name })")
+                return nameMatch || brandMatch || categoryMatch || barcodeMatch
             }
             
             return results
         }
         
-        print("🔍 Search: No results found")
         return []
     }
 
@@ -307,7 +295,6 @@ final class ProductsViewModel: ObservableObject {
             // This ensures scanned products appear in favorites
             if !products.contains(where: { $0.id == product.id }) {
                 products.append(product)
-                print("📦 ProductsViewModel: Added scanned product to products array: \(product.name)")
             }
         }
         persistFavorites()
@@ -338,7 +325,7 @@ final class ProductsViewModel: ObservableObject {
 
         Task {
             do { try await favoritesService.save(userId: user.uid, ids: ids, items: itemsPayload) }
-            catch { print("Favorites: cloud save failed → \(error)") }
+            catch { }
         }
     }
 
@@ -347,15 +334,11 @@ final class ProductsViewModel: ObservableObject {
     
     /// Search for products using Open Beauty Facts search API
     func searchOnline() async {
-        print("🔍 ProductsViewModel: searchOnline() called with query: '\(query)'")
-        
         guard let repository = productRepository else {
-            print("🔍 ProductsViewModel: No ProductRepository available, using local search only")
             return
         }
         
         guard !query.isEmpty else {
-            print("🔍 ProductsViewModel: Empty query, skipping API search")
             searchResults = []
             hasAPIFailed = false
             resetPagination()
@@ -364,7 +347,6 @@ final class ProductsViewModel: ObservableObject {
         
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedQuery.isEmpty else {
-            print("🔍 ProductsViewModel: Empty trimmed query, skipping API search")
             searchResults = []
             hasAPIFailed = false
             resetPagination()
@@ -376,7 +358,6 @@ final class ProductsViewModel: ObservableObject {
         
         isLoading = true
         hasAPIFailed = false
-        print("🔍 ProductsViewModel: Searching API for '\(trimmedQuery)'...")
         
         do {
             let results = try await repository.search(query: trimmedQuery, page: 1, pageSize: 20)
@@ -385,8 +366,6 @@ final class ProductsViewModel: ObservableObject {
             totalResults = results.count
             hasMoreResults = results.count >= 20 // If we got 20 results, there might be more
             
-            print("🔍 ProductsViewModel: Found \(results.count) products from API")
-            
             if results.isEmpty {
                 debugMessage = "No products found for '\(trimmedQuery)'"
                 hasMoreResults = false
@@ -394,7 +373,6 @@ final class ProductsViewModel: ObservableObject {
                 debugMessage = nil
             }
         } catch {
-            print("🔍 ProductsViewModel: Search error: \(error)")
             debugMessage = "Search error: \(error.localizedDescription). Loading fallback products..."
             searchResults = []
             hasAPIFailed = true
@@ -405,7 +383,6 @@ final class ProductsViewModel: ObservableObject {
         }
         
         isLoading = false
-        print("🔍 ProductsViewModel: searchOnline() completed")
     }
     
     func loadMoreResults() async {
@@ -420,14 +397,11 @@ final class ProductsViewModel: ObservableObject {
         isLoadingMore = true
         let nextPage = currentPage + 1
         
-        print("🔍 ProductsViewModel: Loading page \(nextPage) for query '\(trimmedQuery)'")
-        
         do {
             let results = try await repository.search(query: trimmedQuery, page: nextPage, pageSize: 20)
             
             if results.isEmpty {
                 hasMoreResults = false
-                print("🔍 ProductsViewModel: No more results available")
             } else {
                 searchResults.append(contentsOf: results)
                 currentPage = nextPage
@@ -437,11 +411,8 @@ final class ProductsViewModel: ObservableObject {
                 if results.count < 20 {
                     hasMoreResults = false
                 }
-                
-                print("🔍 ProductsViewModel: Loaded \(results.count) more products. Total: \(searchResults.count)")
             }
         } catch {
-            print("🔍 ProductsViewModel: Error loading more results: \(error)")
             hasMoreResults = false
         }
         
@@ -457,35 +428,25 @@ final class ProductsViewModel: ObservableObject {
     
     /// Test API connectivity
     func testAPI() async {
-        print("🔍 ProductsViewModel: Testing API connectivity...")
-        
         guard let repository = productRepository else {
-            print("🔍 ProductsViewModel: No ProductRepository available")
             debugMessage = "No ProductRepository available"
             return
         }
         
-        print("🔍 ProductsViewModel: ProductRepository is available, testing with sample barcode...")
-        
         do {
             // Test with a known barcode from Open Beauty Facts
             if let testProduct = try await repository.fetchByBarcode("737628064502") {
-                print("🔍 ProductsViewModel: API test successful! Found: \(testProduct.name)")
                 debugMessage = "API test successful: \(testProduct.name)"
             } else {
-                print("🔍 ProductsViewModel: API test: No product found for test barcode")
                 debugMessage = "API test: No product found"
             }
         } catch {
-            print("🔍 ProductsViewModel: API test error: \(error)")
             debugMessage = "API test error: \(error.localizedDescription)"
         }
     }
     
     /// Test basic network connectivity
     func testNetworkConnectivity() async {
-        print("🌐 ProductsViewModel: Testing basic network connectivity...")
-        
         guard let url = URL(string: "https://world.openbeautyfacts.org") else {
             debugMessage = "Invalid URL"
             return
@@ -494,14 +455,11 @@ final class ProductsViewModel: ObservableObject {
         do {
             let (_, response) = try await URLSession.shared.data(from: url)
             if let httpResponse = response as? HTTPURLResponse {
-                print("🌐 ProductsViewModel: Network test - Status: \(httpResponse.statusCode)")
                 debugMessage = "Network test - Status: \(httpResponse.statusCode)"
             } else {
-                print("🌐 ProductsViewModel: Network test - Invalid response type")
                 debugMessage = "Network test - Invalid response type"
             }
         } catch {
-            print("🌐 ProductsViewModel: Network test error: \(error)")
             debugMessage = "Network test error: \(error.localizedDescription)"
         }
     }

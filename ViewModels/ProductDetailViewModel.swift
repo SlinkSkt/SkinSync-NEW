@@ -45,14 +45,11 @@ final class ProductDetailViewModel: ObservableObject {
             if let fetchedProduct = try await repository.fetchByBarcode(barcode) {
                 product = fetchedProduct
                 parseIngredients()
-                print("🔍 ProductDetailViewModel: Successfully fetched product: \(fetchedProduct.name)")
             } else {
                 error = APIError.invalidResponse
-                print("🔍 ProductDetailViewModel: Product not found for barcode: \(barcode)")
             }
         } catch {
             self.error = error
-            print("🔍 ProductDetailViewModel: Error fetching product: \(error)")
         }
         
         isLoading = false

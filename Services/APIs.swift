@@ -23,6 +23,4 @@ struct LocalProductAPI: ProductAPI {
     }
 }
 
-// MARK: - Hybrid Product API (Local + Open Beauty Facts)
-// Note: HybridProductAPI removed - now using ProductRepository directly
 

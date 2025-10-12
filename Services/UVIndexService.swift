@@ -127,8 +127,6 @@ final class OpenUVService: UVIndexService {
         }
         
         let url = buildURL(for: location)
-        print("🌐 Fetching UV data from: \(url)")
-        print("🔑 Using API key: \(apiKey.prefix(10))...")
         
         var request = URLRequest(url: url)
         request.setValue(apiKey, forHTTPHeaderField: "x-access-token")
@@ -138,32 +136,17 @@ final class OpenUVService: UVIndexService {
             let (data, response) = try await session.data(for: request)
             
             guard let httpResponse = response as? HTTPURLResponse else {
-                print("❌ Invalid response type")
                 throw UVIndexError.invalidResponse
             }
             
-            print("📡 HTTP Status: \(httpResponse.statusCode)")
-            
             guard httpResponse.statusCode == 200 else {
-                print("❌ API Error: \(httpResponse.statusCode)")
-                if let responseString = String(data: data, encoding: .utf8) {
-                    print("📄 Response body: \(responseString)")
-                }
                 throw UVIndexError.apiError(httpResponse.statusCode)
             }
             
             // Check if response data is empty
             guard !data.isEmpty else {
-                print("❌ Empty response data")
                 throw UVIndexError.invalidResponse
             }
-            
-            // Log the raw response for debugging
-            if let responseString = String(data: data, encoding: .utf8) {
-                print("📄 Raw response: \(responseString)")
-            }
-            
-            print("✅ Successfully received UV data")
             
             // Parse JSON manually to handle the complex structure
             guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -204,14 +187,11 @@ final class OpenUVService: UVIndexService {
                 sunInfo: nil // Ignore sun_info for now
             )
             
-            print("📊 UV Index: \(uvResult.uv)")
             return uvResult
             
         } catch let error as UVIndexError {
-            print("❌ UV Service Error: \(error.localizedDescription)")
             throw error
         } catch {
-            print("❌ Network Error: \(error.localizedDescription)")
             throw UVIndexError.networkError(error)
         }
     }
@@ -230,8 +210,6 @@ final class OpenUVService: UVIndexService {
 
 final class MockUVIndexService: UVIndexService {
     func fetchUVIndex(for location: CLLocation) async throws -> UVIndexResult {
-        print("🧪 Mock UV service: Fetching UV data for location \(location.coordinate)")
-        
         // Simulate network delay
         try await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
         
@@ -254,8 +232,6 @@ final class MockUVIndexService: UVIndexService {
         default:
             baseUV = Double.random(in: 0...2) // Very low night UV
         }
-        
-        print("🧪 Mock UV service: Generated UV index \(baseUV) for hour \(hour)")
         
         return UVIndexResult(
             uv: baseUV,

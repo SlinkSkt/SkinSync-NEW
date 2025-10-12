@@ -63,9 +63,7 @@ final class RoutineService: RoutineServicing {
             "updatedAt": Timestamp(date: payload.updatedAt)
         ]
 
-        print("RoutineService: writing → users/\(userId)/private/routine")
         try await doc(userId).setData(data, merge: true)
-        print("RoutineService: write OK")
     }
 
     func load(userId: String) async throws -> RoutinePayload? {
