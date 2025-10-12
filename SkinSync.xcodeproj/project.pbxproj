@@ -26,6 +26,7 @@
 		FF608B182E9BAD59006E0773 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FF608AFB2E9BACCB006E0773 /* SwiftUI.framework */; };
 		FF608B292E9BAD5B006E0773 /* SkinSyncWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = FF608B162E9BAD59006E0773 /* SkinSyncWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FF608BB22E9BD642006E0773 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FF608BB12E9BD641006E0773 /* XCTest.framework */; platformFilter = ios; };
+		FF608C002E9BDF70006E0773 /* SkinSync.docc in Sources */ = {isa = PBXBuildFile; fileRef = FF608BFF2E9BDF70006E0773 /* SkinSync.docc */; };
 		FF6D2FB42E9AB09900AB353D /* SyncAIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF6D2FB32E9AB09900AB353D /* SyncAIView.swift */; };
 		FF6D2FB62E9AB3FA00AB353D /* OpenAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF6D2FB52E9AB3FA00AB353D /* OpenAIService.swift */; };
 		FF6D2FB82E9AB40600AB353D /* SyncAIViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF6D2FB72E9AB40600AB353D /* SyncAIViewModel.swift */; };
@@ -112,6 +113,7 @@
 		FF608B302E9BAE08006E0773 /* SkinSyncWidgetsExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SkinSyncWidgetsExtension.entitlements; sourceTree = "<group>"; };
 		FF608B782E9BD428006E0773 /* SkinSyncTest.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SkinSyncTest.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FF608BB12E9BD641006E0773 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Platforms/iPhoneOS.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
+		FF608BFF2E9BDF70006E0773 /* SkinSync.docc */ = {isa = PBXFileReference; lastKnownFileType = folder.documentationcatalog; path = SkinSync.docc; sourceTree = "<group>"; };
 		FF6D2FB32E9AB09900AB353D /* SyncAIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncAIView.swift; sourceTree = "<group>"; };
 		FF6D2FB52E9AB3FA00AB353D /* OpenAIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIService.swift; sourceTree = "<group>"; };
 		FF6D2FB72E9AB40600AB353D /* SyncAIViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncAIViewModel.swift; sourceTree = "<group>"; };
@@ -238,6 +240,7 @@
 		FF935A9D2E62031100D412DD = {
 			isa = PBXGroup;
 			children = (
+				FF608BFF2E9BDF70006E0773 /* SkinSync.docc */,
 				FF608B302E9BAE08006E0773 /* SkinSyncWidgetsExtension.entitlements */,
 				FF935AF52E62056200D412DD /* Core */,
 				FF935AF72E62056200D412DD /* Models */,
@@ -533,6 +536,7 @@
 				FF935B342E62D36000D412DD /* HomeViewModel.swift in Sources */,
 				FF935B042E62056200D412DD /* SkinSyncApp.swift in Sources */,
 				FFE900F82E91659000DDC574 /* UVIndexView.swift in Sources */,
+				FF608C002E9BDF70006E0773 /* SkinSync.docc in Sources */,
 				FF70F3852E9A33C000728BC5 /* NotificationViewModel.swift in Sources */,
 				FF935B052E62056200D412DD /* DataStore.swift in Sources */,
 				FFE900F42E91656C00DDC574 /* UVIndexService.swift in Sources */,
