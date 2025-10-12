@@ -2,7 +2,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct RoutineView: View {
-    @StateObject private var viewModel: RoutineViewModel
+    @EnvironmentObject private var viewModel: RoutineViewModel
     @EnvironmentObject private var productsVM: ProductsViewModel
     @State private var showingAddToMorning = false
     @State private var showingAddToEvening = false
@@ -15,15 +15,6 @@ struct RoutineView: View {
     @State private var draggingID: String? = nil
     
     let theme: AppTheme
-    let store: DataStore
-    let productRepository: ProductRepository?
-    
-    init(theme: AppTheme, store: DataStore, productRepository: ProductRepository?) {
-        self.theme = theme
-        self.store = store
-        self.productRepository = productRepository
-        self._viewModel = StateObject(wrappedValue: RoutineViewModel(store: store, productRepository: productRepository))
-    }
     
     var body: some View {
         NavigationStack {
@@ -81,11 +72,7 @@ struct RoutineView: View {
             )
             .navigationTitle("My Routine")
             .navigationBarTitleDisplayMode(.large)
-            .onAppear {
-                Task {
-                    await viewModel.load()
-                }
-            }
+            // No onAppear needed - ViewModel loads data on init
             .overlay(alignment: .bottom) {
                 // Undo Toast
                 if showUndoToast {
@@ -138,8 +125,8 @@ struct RoutineView: View {
             ProductDetailView(
                 product: product,
                 theme: theme,
-                store: store,
-                productRepository: productRepository
+                store: viewModel.store,
+                productRepository: viewModel.productRepository
             )
         }
     }
@@ -751,10 +738,8 @@ struct AddProductRow: View {
 }
 
 #Preview {
-    RoutineView(
-        theme: AppTheme(config: .default),
-        store: FileDataStore(),
-        productRepository: nil
-    )
-    .environmentObject(ProductsViewModel(store: FileDataStore(), productRepository: nil))
+    let store = FileDataStore()
+    return RoutineView(theme: AppTheme(config: .default, colorScheme: .light))
+        .environmentObject(ProductsViewModel(store: store, productRepository: nil))
+        .environmentObject(RoutineViewModel(store: store, productRepository: nil))
 }

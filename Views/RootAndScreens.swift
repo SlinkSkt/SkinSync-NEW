@@ -102,7 +102,7 @@ struct RootView: View {
                     SyncAIView(theme: theme, viewModel: syncAIVM)
                     
                 case 4:
-                    RoutineView(theme: theme, store: store, productRepository: productRepository)
+                    RoutineView(theme: theme)
                         .environmentObject(productsVM)
                         .environmentObject(routineVM)
                     

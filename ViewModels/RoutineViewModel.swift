@@ -14,9 +14,9 @@ final class RoutineViewModel: ObservableObject {
     
     
     // MARK: - Dependencies
-    private let store: DataStore
+    let store: DataStore
     private let routineService: RoutineServicing
-    private let productRepository: ProductRepository?
+    let productRepository: ProductRepository?
     
     // MARK: - Init
     init(store: DataStore, productRepository: ProductRepository? = nil, routineService: RoutineServicing = RoutineService()) {
@@ -25,8 +25,9 @@ final class RoutineViewModel: ObservableObject {
         self.routineService = routineService
         print("🔄 RoutineViewModel: Initialized")
         
-        if let user = Auth.auth().currentUser {
-            Task {await loadFromCloud(userId: user.uid)}
+        // Load from local storage first
+        Task {
+            await load()
         }
     }
     
