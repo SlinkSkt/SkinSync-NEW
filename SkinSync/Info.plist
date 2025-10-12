@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>Google</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.786908588123-ogfa9h7clsml8ci6ehh0rasr01hp62te</string>
+			</array>
+		</dict>
+	</array>
+	<key>OpenAI_API_Key</key>
+	<string>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</string>
+	<key>OpenUV_API_Key</key>
+	<string>openuv-2sy4amrmgcdf6jo-io</string>
+	<key>Privacy - Local notifications Usage Description</key>
+	<string>SkinSync uses notifications to remind you about your skincare routine.</string>
+</dict>
+</plist>

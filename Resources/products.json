@@ -1,0 +1,67 @@
+[
+  {
+    "name": "Heartleaf 77% Soothing Cleansing Foam",
+    "brand": "Anua",
+    "category": "Cleanser",
+    "assetName": "anua",
+    "concerns": ["sensitivity", "oiliness"],
+    "ingredients": [
+      { "inciName": "Houttuynia Cordata Extract", "commonName": "Heartleaf Extract", "role": "soothing", "note": "Calms redness and irritation; generally gentle for daily use." },
+      { "inciName": "Glycerin", "commonName": "Glycerin", "role": "humectant", "note": "Draws moisture into the skin; low irritation risk." }
+    ],
+    "barcode": "8809642711234",
+    "rating": 4.3
+  },
+  {
+    "name": "2% BHA Liquid Exfoliant",
+    "brand": "Paula's Choice",
+    "category": "Treatment",
+    "assetName": "BHA",
+    "concerns": ["acne", "oiliness", "pores"],
+    "ingredients": [
+      { "inciName": "Salicylic Acid", "commonName": "BHA", "role": "exfoliant", "note": "Unclogs pores and reduces blackheads; can be drying—start 2–3x/week." },
+      { "inciName": "Camellia Sinensis Leaf Extract", "commonName": "Green Tea", "role": "antioxidant", "note": "Helps soothe and reduce visible redness." }
+    ],
+    "barcode": "0810004882001",
+    "rating": 4.6
+  },
+  {
+    "name": "Pure Vitamin C10 Serum",
+    "brand": "La Roche-Posay",
+    "category": "Treatment",
+    "assetName": "Pure",
+    "concerns": ["pigmentation", "aging", "redness"],
+    "ingredients": [
+      { "inciName": "Ascorbic Acid", "commonName": "Vitamin C (10%)", "role": "antioxidant", "note": "Brightens and supports collagen; may tingle on sensitive skin." },
+      { "inciName": "Salicyloyl Phytosphingosine", "commonName": "LHA", "role": "skin-conditioning", "note": "Refines texture; patch test if sensitive." }
+    ],
+    "barcode": "3337875660572",
+    "rating": 4.4
+  },
+  {
+    "name": "Anthelios Invisible Fluid SPF50+",
+    "brand": "La Roche-Posay",
+    "category": "Sunscreen",
+    "assetName": "Anthelios",
+    "concerns": ["aging", "pigmentation", "sensitivity", "redness"],
+    "ingredients": [
+      { "inciName": "Ethylhexyl Triazone", "commonName": "Uvinul T 150", "role": "UV filter", "note": "High UVB protection; lightweight feel." },
+      { "inciName": "Drometrizole Trisiloxane", "commonName": "Mexoryl XL", "role": "UV filter", "note": "Broad UVA coverage; use as last AM step." }
+    ],
+    "barcode": "3337875545879",
+    "rating": 4.7
+  },
+  {
+    "name": "Niacinamide 10% + Zinc 1%",
+    "brand": "The Ordinary",
+    "category": "Treatment",
+    "assetName": "Niacinamide",
+    "concerns": ["oiliness", "pores", "redness"],
+    "ingredients": [
+      { "inciName": "Niacinamide", "commonName": "Niacinamide", "role": "sebum-regulating", "note": "Helps with oiliness and redness; can pill with heavy creams." },
+      { "inciName": "Zinc PCA", "commonName": "Zinc PCA", "role": "anti-inflammatory", "note": "Supports blemish-prone skin; generally low irritation." }
+    ],
+    "barcode": "769915194318",
+    "rating": 4.2
+  }
+]
