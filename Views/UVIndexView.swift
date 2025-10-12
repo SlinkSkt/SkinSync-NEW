@@ -163,12 +163,38 @@ struct UVIndexView: View {
             }
         }
         .padding(AppTheme.Spacing.lg)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: AppTheme.cardCornerRadius))
+        .background(
+            ZStack {
+                // Base card background
+                RoundedRectangle(cornerRadius: AppTheme.cardCornerRadius)
+                    .fill(theme.cardBackground)
+                
+                // Gradient overlay for premium feel
+                LinearGradient(
+                    colors: [
+                        uvIndexColor.opacity(0.05),
+                        uvIndexColor.opacity(0.02),
+                        Color.clear
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .clipShape(RoundedRectangle(cornerRadius: AppTheme.cardCornerRadius))
+            }
+        )
         .overlay(
             RoundedRectangle(cornerRadius: AppTheme.cardCornerRadius)
-                .stroke(uvIndexColor.opacity(0.2), lineWidth: 1)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [uvIndexColor.opacity(0.4), uvIndexColor.opacity(0.1)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1.5
+                )
         )
-        .shadow(color: theme.cardShadow, radius: 4, x: 0, y: 2)
+        .shadow(color: theme.cardShadow, radius: 12, x: 0, y: 6)
+        .shadow(color: uvIndexColor.opacity(0.1), radius: 20, x: 0, y: 10)
         .onAppear {
             if viewModel.uvIndex == nil && !viewModel.isLoading {
                 viewModel.requestLocationAndFetchUVIndex()

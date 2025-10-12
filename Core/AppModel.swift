@@ -46,7 +46,7 @@ struct AppConfig: Codable, Equatable {
 
     static let `default` = AppConfig(
         appTitle: "SkinSync",
-        brandPrimaryHex: "#8B9461",
+        brandPrimaryHex: "#6B8E7F", // Modern teal-green for skincare/wellness
         enableLogging: true
     )
 }

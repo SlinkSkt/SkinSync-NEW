@@ -19,6 +19,12 @@
 		F5476B322E9B434A00656F06 /* ProfileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5476B312E9B433C00656F06 /* ProfileService.swift */; };
 		F5476B352E9B530600656F06 /* RoutineService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5476B342E9B530100656F06 /* RoutineService.swift */; };
 		F5476B372E9B6E5D00656F06 /* FavoritesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5476B362E9B6E3D00656F06 /* FavoritesService.swift */; };
+		FF608AC12E9B8EE3006E0773 /* SwiftDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF608AC02E9B8EE3006E0773 /* SwiftDataModels.swift */; };
+		FF608AC32E9B901D006E0773 /* SwiftDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF608AC22E9B901D006E0773 /* SwiftDataService.swift */; };
+		FF608AC52E9B9029006E0773 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF608AC42E9B9029006E0773 /* SettingsViewModel.swift */; };
+		FF608B172E9BAD59006E0773 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FF608AF92E9BACCB006E0773 /* WidgetKit.framework */; };
+		FF608B182E9BAD59006E0773 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FF608AFB2E9BACCB006E0773 /* SwiftUI.framework */; };
+		FF608B292E9BAD5B006E0773 /* SkinSyncWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = FF608B162E9BAD59006E0773 /* SkinSyncWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FF6D2FB42E9AB09900AB353D /* SyncAIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF6D2FB32E9AB09900AB353D /* SyncAIView.swift */; };
 		FF6D2FB62E9AB3FA00AB353D /* OpenAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF6D2FB52E9AB3FA00AB353D /* OpenAIService.swift */; };
 		FF6D2FB82E9AB40600AB353D /* SyncAIViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF6D2FB72E9AB40600AB353D /* SyncAIViewModel.swift */; };
@@ -59,6 +65,30 @@
 		FFE901C42E98C98300DDC574 /* ProductRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFE901C32E98C98300DDC574 /* ProductRepository.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		FF608B272E9BAD5B006E0773 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FF935A9E2E62031100D412DD /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FF608B152E9BAD59006E0773;
+			remoteInfo = SkinSyncWidgetsExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		FF608AEC2E9BA6D7006E0773 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				FF608B292E9BAD5B006E0773 /* SkinSyncWidgetsExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		F5476B272E9B222A00656F06 /* FirebaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseManager.swift; sourceTree = "<group>"; };
 		F5476B292E9B225200656F06 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
@@ -67,6 +97,13 @@
 		F5476B312E9B433C00656F06 /* ProfileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileService.swift; sourceTree = "<group>"; };
 		F5476B342E9B530100656F06 /* RoutineService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutineService.swift; sourceTree = "<group>"; };
 		F5476B362E9B6E3D00656F06 /* FavoritesService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesService.swift; sourceTree = "<group>"; };
+		FF608AC02E9B8EE3006E0773 /* SwiftDataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataModels.swift; sourceTree = "<group>"; };
+		FF608AC22E9B901D006E0773 /* SwiftDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataService.swift; sourceTree = "<group>"; };
+		FF608AC42E9B9029006E0773 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
+		FF608AF92E9BACCB006E0773 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		FF608AFB2E9BACCB006E0773 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		FF608B162E9BAD59006E0773 /* SkinSyncWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SkinSyncWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		FF608B302E9BAE08006E0773 /* SkinSyncWidgetsExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SkinSyncWidgetsExtension.entitlements; sourceTree = "<group>"; };
 		FF6D2FB32E9AB09900AB353D /* SyncAIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncAIView.swift; sourceTree = "<group>"; };
 		FF6D2FB52E9AB3FA00AB353D /* OpenAIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIService.swift; sourceTree = "<group>"; };
 		FF6D2FB72E9AB40600AB353D /* SyncAIViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncAIViewModel.swift; sourceTree = "<group>"; };
@@ -109,6 +146,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		FF608B2F2E9BADA6006E0773 /* Exceptions for "SkinSyncWidgets" folder in "SkinSyncWidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = FF608B152E9BAD59006E0773 /* SkinSyncWidgetsExtension */;
+		};
 		FF935B142E62119000D412DD /* Exceptions for "SkinSync" folder in "SkinSync" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -119,6 +163,14 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		FF608B192E9BAD59006E0773 /* SkinSyncWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				FF608B2F2E9BADA6006E0773 /* Exceptions for "SkinSyncWidgets" folder in "SkinSyncWidgetsExtension" target */,
+			);
+			path = SkinSyncWidgets;
+			sourceTree = "<group>";
+		};
 		FF935AA82E62031200D412DD /* SkinSync */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -130,6 +182,15 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		FF608B132E9BAD59006E0773 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FF608B182E9BAD59006E0773 /* SwiftUI.framework in Frameworks */,
+				FF608B172E9BAD59006E0773 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FF935AA32E62031200D412DD /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -145,9 +206,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		FF608AF82E9BACCB006E0773 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				FF608AF92E9BACCB006E0773 /* WidgetKit.framework */,
+				FF608AFB2E9BACCB006E0773 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		FF935A9D2E62031100D412DD = {
 			isa = PBXGroup;
 			children = (
+				FF608B302E9BAE08006E0773 /* SkinSyncWidgetsExtension.entitlements */,
 				FF935AF52E62056200D412DD /* Core */,
 				FF935AF72E62056200D412DD /* Models */,
 				FF935AF92E62056200D412DD /* Resources */,
@@ -156,6 +227,8 @@
 				FF935B002E62056200D412DD /* ViewModels */,
 				FF935B022E62056200D412DD /* Views */,
 				FF935AA82E62031200D412DD /* SkinSync */,
+				FF608B192E9BAD59006E0773 /* SkinSyncWidgets */,
+				FF608AF82E9BACCB006E0773 /* Frameworks */,
 				FF935AA72E62031200D412DD /* Products */,
 			);
 			sourceTree = "<group>";
@@ -164,6 +237,7 @@
 			isa = PBXGroup;
 			children = (
 				FF935AA62E62031200D412DD /* SkinSync.app */,
+				FF608B162E9BAD59006E0773 /* SkinSyncWidgetsExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -182,6 +256,7 @@
 		FF935AF72E62056200D412DD /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				FF608AC02E9B8EE3006E0773 /* SwiftDataModels.swift */,
 				FF935AF62E62056200D412DD /* Domain.swift */,
 			);
 			path = Models;
@@ -198,6 +273,7 @@
 		FF935AFC2E62056200D412DD /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				FF608AC22E9B901D006E0773 /* SwiftDataService.swift */,
 				F5476B362E9B6E3D00656F06 /* FavoritesService.swift */,
 				F5476B342E9B530100656F06 /* RoutineService.swift */,
 				F5476B312E9B433C00656F06 /* ProfileService.swift */,
@@ -225,6 +301,7 @@
 		FF935B002E62056200D412DD /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				FF608AC42E9B9029006E0773 /* SettingsViewModel.swift */,
 				F5476B2B2E9B227100656F06 /* AuthViewModel.swift */,
 				FF6D2FB72E9AB40600AB353D /* SyncAIViewModel.swift */,
 				FF70F3842E9A33C000728BC5 /* NotificationViewModel.swift */,
@@ -265,6 +342,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		FF608B152E9BAD59006E0773 /* SkinSyncWidgetsExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FF608B2A2E9BAD5B006E0773 /* Build configuration list for PBXNativeTarget "SkinSyncWidgetsExtension" */;
+			buildPhases = (
+				FF608B122E9BAD59006E0773 /* Sources */,
+				FF608B132E9BAD59006E0773 /* Frameworks */,
+				FF608B142E9BAD59006E0773 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				FF608B192E9BAD59006E0773 /* SkinSyncWidgets */,
+			);
+			name = SkinSyncWidgetsExtension;
+			packageProductDependencies = (
+			);
+			productName = SkinSyncWidgetsExtension;
+			productReference = FF608B162E9BAD59006E0773 /* SkinSyncWidgetsExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		FF935AA52E62031200D412DD /* SkinSync */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = FF935AB12E62031300D412DD /* Build configuration list for PBXNativeTarget "SkinSync" */;
@@ -272,10 +371,12 @@
 				FF935AA22E62031200D412DD /* Sources */,
 				FF935AA32E62031200D412DD /* Frameworks */,
 				FF935AA42E62031200D412DD /* Resources */,
+				FF608AEC2E9BA6D7006E0773 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				FF608B282E9BAD5B006E0773 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				FF935AA82E62031200D412DD /* SkinSync */,
@@ -302,6 +403,9 @@
 				LastSwiftUpdateCheck = 1640;
 				LastUpgradeCheck = 1640;
 				TargetAttributes = {
+					FF608B152E9BAD59006E0773 = {
+						CreatedOnToolsVersion = 16.4;
+					};
 					FF935AA52E62031200D412DD = {
 						CreatedOnToolsVersion = 16.4;
 					};
@@ -326,11 +430,19 @@
 			projectRoot = "";
 			targets = (
 				FF935AA52E62031200D412DD /* SkinSync */,
+				FF608B152E9BAD59006E0773 /* SkinSyncWidgetsExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		FF608B142E9BAD59006E0773 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FF935AA42E62031200D412DD /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -342,6 +454,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		FF608B122E9BAD59006E0773 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FF935AA22E62031200D412DD /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -355,6 +474,7 @@
 				FF70F3852E9A33C000728BC5 /* NotificationViewModel.swift in Sources */,
 				FF935B052E62056200D412DD /* DataStore.swift in Sources */,
 				FFE900F42E91656C00DDC574 /* UVIndexService.swift in Sources */,
+				FF608AC32E9B901D006E0773 /* SwiftDataService.swift in Sources */,
 				F5476B2A2E9B225A00656F06 /* AuthService.swift in Sources */,
 				F5476B302E9B2FF600656F06 /* LoginView.swift in Sources */,
 				FF935B302E62C51300D412DD /* ProductsViewModel.swift in Sources */,
@@ -388,14 +508,80 @@
 				FF6D2FBA2E9AC83400AB353D /* ProfileEditorViews.swift in Sources */,
 				FF70F3832E9A32D900728BC5 /* RoutineView.swift in Sources */,
 				FF935B0C2E62056200D412DD /* RootAndScreens.swift in Sources */,
+				FF608AC12E9B8EE3006E0773 /* SwiftDataModels.swift in Sources */,
 				FFE901BA2E98775200DDC574 /* ProductDetailViewModel.swift in Sources */,
 				FF6D2FB82E9AB40600AB353D /* SyncAIViewModel.swift in Sources */,
+				FF608AC52E9B9029006E0773 /* SettingsViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		FF608B282E9BAD5B006E0773 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FF608B152E9BAD59006E0773 /* SkinSyncWidgetsExtension */;
+			targetProxy = FF608B272E9BAD5B006E0773 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		FF608B2B2E9BAD5B006E0773 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = SkinSyncWidgetsExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = L85BJKH5DQ;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SkinSyncWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SkinSyncWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Test.SkinSync114.SkinSyncWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		FF608B2C2E9BAD5B006E0773 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = SkinSyncWidgetsExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = L85BJKH5DQ;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SkinSyncWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SkinSyncWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Test.SkinSync114.SkinSyncWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		FF935AAF2E62031300D412DD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -520,6 +706,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = SkinSync/SkinSync.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = L85BJKH5DQ;
@@ -551,6 +738,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = SkinSync/SkinSync.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = L85BJKH5DQ;
@@ -580,6 +768,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		FF608B2A2E9BAD5B006E0773 /* Build configuration list for PBXNativeTarget "SkinSyncWidgetsExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FF608B2B2E9BAD5B006E0773 /* Debug */,
+				FF608B2C2E9BAD5B006E0773 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		FF935AA12E62031100D412DD /* Build configuration list for PBXProject "SkinSync" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

@@ -5,6 +5,7 @@ import SwiftUI
 struct RootView: View {
     @EnvironmentObject private var app: AppModel
     @EnvironmentObject private var auth: AuthViewModel
+    @Environment(\.colorScheme) private var colorScheme
 
     // Shared dependencies so every view model uses the same store/services
     private let store: FileDataStore
@@ -46,14 +47,18 @@ struct RootView: View {
         _syncAIVM = StateObject(wrappedValue: SyncAIViewModel())
     }
 
-    private var theme: AppTheme { AppTheme(config: app.config) }
+    // Optimized theme creation - only recreates when config or colorScheme changes
+    private var theme: AppTheme { 
+        AppTheme(config: app.config, colorScheme: colorScheme) 
+    }
 
     @State private var selectedTab = 0
     @State private var showTabBar = true
     
     var body: some View {
-        VStack(spacing: 0) {
+        ZStack(alignment: .bottom) {
             // Content
+            VStack(spacing: 0) {
             Group {
                 switch selectedTab {
                 case 0:
@@ -105,13 +110,15 @@ struct RootView: View {
                     EmptyView()
                 }
             }
+            }
             
-            // Custom Tab Bar
+            // Custom Tab Bar (in ZStack, overlaying content)
             if showTabBar {
                 CustomTabBar(selectedTab: $selectedTab, theme: theme)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
+        .ignoresSafeArea(.keyboard, edges: .bottom)
         .tint(theme.primary)
         .fullScreenCover(
             isPresented: Binding(get: { auth.user == nil }, set: { _ in })
@@ -321,8 +328,41 @@ struct HomeView: View {
             }
         }
         .padding(AppTheme.Spacing.lg)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: AppTheme.cardCornerRadius))
-        .shadow(color: theme.cardShadow, radius: 4, x: 0, y: 2)
+        .background(
+            ZStack {
+                // Premium card background
+                RoundedRectangle(cornerRadius: AppTheme.cardCornerRadius)
+                    .fill(theme.cardBackground)
+                
+                // Gradient overlay
+                LinearGradient(
+                    colors: [
+                        (isMorningTime ? theme.success : theme.info).opacity(0.08),
+                        (isMorningTime ? theme.success : theme.info).opacity(0.02),
+                        Color.clear
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .clipShape(RoundedRectangle(cornerRadius: AppTheme.cardCornerRadius))
+            }
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: AppTheme.cardCornerRadius)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [
+                            (isMorningTime ? theme.success : theme.info).opacity(0.3),
+                            (isMorningTime ? theme.success : theme.info).opacity(0.1)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1.5
+                )
+        )
+        .shadow(color: theme.cardShadow, radius: 12, x: 0, y: 6)
+        .shadow(color: (isMorningTime ? theme.success : theme.info).opacity(0.08), radius: 20, x: 0, y: 10)
     }
 
     var body: some View {
@@ -333,12 +373,23 @@ struct HomeView: View {
                     Button {
                         showingProfile = true
                     } label: {
-                        Image(systemName: profileVM.profile.profileIcon)
-                            .font(.title2)
-                            .foregroundStyle(theme.primary)
-                            .frame(width: 56, height: 56)
-                            .background(.ultraThinMaterial, in: Circle())
-                            .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
+                        ZStack {
+                            // Gradient background
+                            Circle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [theme.primaryLight, theme.primary],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                            
+                            Image(systemName: profileVM.profile.profileIcon)
+                                .font(.title2)
+                                .foregroundStyle(.white)
+                        }
+                        .frame(width: 56, height: 56)
+                        .shadow(color: theme.primary.opacity(0.3), radius: 8, x: 0, y: 4)
                     }
                     .accessibilityLabel("Open Profile")
                     .accessibilityHint("Tap to view and edit your profile settings")
@@ -440,6 +491,7 @@ struct HomeView: View {
             }
             .padding(.top, AppTheme.Spacing.md)
         }
+        .background(theme.background)
         .refreshable { vm.load() }
         .onAppear { vm.load() }
         .sheet(isPresented: $showingProfile) {
@@ -543,7 +595,28 @@ struct ProductRow: View {
         }
         .padding(.vertical, AppTheme.Spacing.md)
         .padding(.horizontal, AppTheme.Spacing.sm)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: AppTheme.mediumCornerRadius))
+        .background(
+            ZStack {
+                RoundedRectangle(cornerRadius: AppTheme.mediumCornerRadius)
+                    .fill(theme.cardBackground)
+                
+                // Subtle gradient
+                LinearGradient(
+                    colors: [
+                        theme.primary.opacity(0.03),
+                        Color.clear
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .clipShape(RoundedRectangle(cornerRadius: AppTheme.mediumCornerRadius))
+            }
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: AppTheme.mediumCornerRadius)
+                .strokeBorder(theme.primary.opacity(0.1), lineWidth: 1)
+        )
+        .shadow(color: theme.subtleShadow, radius: 8, x: 0, y: 4)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(product.brand) \(product.name)")
         .accessibilityHint("Tap to view product details")
@@ -586,71 +659,225 @@ struct ContentStateView: View {
 struct CustomTabBar: View {
     @Binding var selectedTab: Int
     let theme: AppTheme
+    @Environment(\.colorScheme) private var colorScheme
     
     private let tabs = [
-        TabItem(icon: "house.fill", title: "Home", index: 0),
-        TabItem(icon: "shippingbox.fill", title: "Products", index: 1),
-        TabItem(icon: "camera.viewfinder", title: "Scan", index: 2, isSpecial: true),
-        TabItem(icon: "brain.head.profile", title: "SyncAI", index: 3),
-        TabItem(icon: "calendar.badge.clock", title: "Routine", index: 4)
+        TabItem(icon: "sparkles", selectedIcon: "sparkles", title: "Home", index: 0),
+        TabItem(icon: "cube.box", selectedIcon: "cube.box.fill", title: "Products", index: 1),
+        TabItem(icon: "qrcode.viewfinder", selectedIcon: "qrcode.viewfinder", title: "Scan", index: 2, isSpecial: true),
+        TabItem(icon: "sparkle.magnifyingglass", selectedIcon: "sparkle.magnifyingglass", title: "SyncAI", index: 3),
+        TabItem(icon: "star.circle", selectedIcon: "star.circle.fill", title: "Routine", index: 4)
     ]
     
     var body: some View {
-        HStack(spacing: 0) {
-            ForEach(tabs, id: \.index) { tab in
-                Button(action: {
-                    selectedTab = tab.index
-                }) {
-                    if tab.isSpecial {
-                        // Special styling for Scan tab - larger but within HIG bounds
-                        VStack(spacing: 2) {
-                            ZStack {
-                                Circle()
-                                    .fill(Color.black)
-                                    .frame(width: 40, height: 40)
-                                
-                                Image(systemName: tab.icon)
-                                    .font(.system(size: 20, weight: .bold))
-                                    .foregroundStyle(.white)
+        ZStack(alignment: .bottom) {
+            // Tab bar background with blur
+            VStack(spacing: 0) {
+                HStack(spacing: 0) {
+                    ForEach(tabs, id: \.index) { tab in
+                        if !tab.isSpecial {
+                            Button(action: {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    selectedTab = tab.index
+                                }
+                            }) {
+                                TabBarButton(
+                                    tab: tab,
+                                    isSelected: selectedTab == tab.index,
+                                    theme: theme
+                                )
                             }
-                            
-                            Text(tab.title)
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundStyle(selectedTab == tab.index ? .primary : .secondary)
+                            .buttonStyle(.plain)
+                        } else {
+                            // Spacer for floating scan button
+                            Spacer()
+                                .frame(maxWidth: .infinity)
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 6)
-                    } else {
-                        // Regular styling for other tabs - standard HIG sizing
-                        VStack(spacing: 2) {
-                            Image(systemName: tab.icon)
-                                .font(.system(size: 20, weight: .medium))
-                                .foregroundStyle(selectedTab == tab.index ? theme.primary : .secondary)
-                            
-                            Text(tab.title)
-                                .font(.system(size: 10, weight: .medium))
-                                .foregroundStyle(selectedTab == tab.index ? theme.primary : .secondary)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 6)
                     }
                 }
-                .buttonStyle(.plain)
+                .frame(height: 70)
+                .background(
+                    GeometryReader { geometry in
+                        ZStack {
+                            // Solid background (no transparency to avoid white blocks)
+                            (colorScheme == .dark ? Color.black : Color.white)
+                                .frame(height: geometry.size.height + geometry.safeAreaInsets.bottom)
+                            
+                            // Subtle blur overlay
+                            Rectangle()
+                                .fill(.ultraThinMaterial)
+                                .opacity(0.5)
+                                .frame(height: geometry.size.height + geometry.safeAreaInsets.bottom)
+                        }
+                        .edgesIgnoringSafeArea(.bottom)
+                    }
+                )
+                .overlay(
+                    // Top border gradient
+                    LinearGradient(
+                        colors: [
+                            theme.primary.opacity(0.2),
+                            theme.primary.opacity(0.05),
+                            Color.clear
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                    .frame(height: 1),
+                    alignment: .top
+                )
             }
+            
+            // Floating Scan Button (centered, less elevated)
+            Button(action: {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
+                    selectedTab = 2
+                }
+            }) {
+                FloatingScanButton(
+                    isSelected: selectedTab == 2,
+                    theme: theme
+                )
+            }
+            .buttonStyle(.plain)
+            .offset(y: -15) // Float above tab bar (reduced from -20)
         }
-        .frame(height: 49) // Standard tab bar height per Apple HIG
-        .background(Color(.systemBackground))
+    }
+}
+
+// MARK: - Tab Bar Button
+struct TabBarButton: View {
+    let tab: TabItem
+    let isSelected: Bool
+    let theme: AppTheme
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            ZStack {
+                // Selection indicator background
+                if isSelected {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(theme.primary.opacity(0.15))
+                        .frame(width: 50, height: 32)
+                        .transition(.scale.combined(with: .opacity))
+                }
+                
+                // Icon with animated fill
+                Image(systemName: isSelected ? tab.selectedIcon : tab.icon)
+                    .font(.system(size: 22, weight: isSelected ? .semibold : .regular))
+                    .foregroundStyle(
+                        isSelected 
+                            ? LinearGradient(
+                                colors: [theme.primary, theme.primaryDark],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                              )
+                            : LinearGradient(
+                                colors: [Color.secondary, Color.secondary],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                              )
+                    )
+                    .symbolRenderingMode(.hierarchical)
+                    .scaleEffect(isSelected ? 1.1 : 1.0)
+            }
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
+            
+            // Label
+            Text(tab.title)
+                .font(.system(size: 10, weight: isSelected ? .semibold : .medium))
+                .foregroundStyle(isSelected ? theme.primary : .secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .contentShape(Rectangle())
+    }
+}
+
+// MARK: - Floating Scan Button
+struct FloatingScanButton: View {
+    let isSelected: Bool
+    let theme: AppTheme
+    
+    var body: some View {
+        VStack(spacing: 2) {
+            ZStack {
+                // Outer glow ring (smaller)
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [
+                                theme.primary.opacity(0.3),
+                                theme.primary.opacity(0.1),
+                                Color.clear
+                            ],
+                            center: .center,
+                            startRadius: 22,
+                            endRadius: 35
+                        )
+                    )
+                    .frame(width: 70, height: 70)
+                    .blur(radius: 4)
+                
+                // Main button with gradient (smaller)
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [theme.primaryLight, theme.primary, theme.primaryDark],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 56, height: 56)
+                    .overlay(
+                        Circle()
+                            .stroke(
+                                LinearGradient(
+                                    colors: [.white.opacity(0.5), .clear],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 2
+                            )
+                            .blur(radius: 0.5)
+                    )
+                
+                // Icon with animation (smaller)
+                Image(systemName: "qrcode.viewfinder")
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .symbolRenderingMode(.hierarchical)
+                    .rotationEffect(.degrees(isSelected ? 360 : 0))
+                    .scaleEffect(isSelected ? 1.1 : 1.0)
+            }
+            .shadow(color: theme.primary.opacity(0.3), radius: 12, x: 0, y: 6)
+            .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
+            
+            // Label with premium style (smaller)
+            Text("Scan")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [theme.primary, theme.primaryDark],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .offset(y: -2)
+        }
+        .animation(.spring(response: 0.4, dampingFraction: 0.6), value: isSelected)
     }
 }
 
 struct TabItem {
     let icon: String
+    let selectedIcon: String
     let title: String
     let index: Int
     let isSpecial: Bool
     
-    init(icon: String, title: String, index: Int, isSpecial: Bool = false) {
+    init(icon: String, selectedIcon: String? = nil, title: String, index: Int, isSpecial: Bool = false) {
         self.icon = icon
+        self.selectedIcon = selectedIcon ?? icon
         self.title = title
         self.index = index
         self.isSpecial = isSpecial

@@ -8,6 +8,7 @@
 import Foundation
 import CoreLocation
 import Combine
+import WidgetKit
 
 @MainActor
 final class UVIndexViewModel: NSObject, ObservableObject {
@@ -26,6 +27,7 @@ final class UVIndexViewModel: NSObject, ObservableObject {
     // Cache settings
     private let cacheExpirationInterval: TimeInterval = 3600 // 1 hour
     private let userDefaults = UserDefaults.standard
+    private let sharedDefaults = UserDefaults(suiteName: "group.com.skinsync.app")
     private let cacheKey = "cached_uv_index"
     private let timestampKey = "uv_index_timestamp"
     
@@ -284,8 +286,27 @@ final class UVIndexViewModel: NSObject, ObservableObject {
             let data = try JSONEncoder().encode(result)
             userDefaults.set(data, forKey: cacheKey)
             userDefaults.set(Date(), forKey: timestampKey)
+            
+            // Also save to shared UserDefaults for widget access
+            sharedDefaults?.set(uvIndex, forKey: "lastUVIndex")
+            sharedDefaults?.set(Date(), forKey: "lastUVUpdate")
+            if let cityName = currentCity {
+                sharedDefaults?.set(cityName, forKey: "lastCity")
+            }
+            
+            // Verify the data was saved
+            if let savedUV = sharedDefaults?.object(forKey: "lastUVIndex") as? Double {
+                print("✅ Saved UV data to shared UserDefaults for widget: \(savedUV)")
+            } else {
+                print("⚠️ Failed to save UV data to shared UserDefaults")
+            }
+            
+            // Reload widget timelines
+            WidgetCenter.shared.reloadAllTimelines()
+            print("🔄 Triggered widget refresh")
         } catch {
             // Cache error - not critical
+            print("⚠️ Failed to cache UV data: \(error)")
         }
     }
 }

@@ -22,6 +22,7 @@ struct SyncAIView: View {
                         }
                         .padding(.horizontal, AppTheme.Spacing.screenEdge)
                         .padding(.vertical, AppTheme.Spacing.md)
+                        .padding(.bottom, 80) // Space for chat input + tab bar
                     }
                     .onChange(of: viewModel.messages.count) { _, _ in
                         if let lastMessage = viewModel.messages.last {
@@ -54,7 +55,9 @@ struct SyncAIView: View {
                         }
                 }
                 
-                // Input Area
+                Spacer(minLength: 0)
+                
+                // Input Area (positioned at bottom)
                 ChatInputView(viewModel: viewModel, theme: theme)
             }
             .navigationTitle("SyncAI")
@@ -240,10 +243,22 @@ struct ChatInputView: View {
                 .disabled(viewModel.currentMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || viewModel.isLoading)
             }
             .padding(.horizontal, AppTheme.Spacing.screenEdge)
-            .padding(.vertical, AppTheme.Spacing.md)
-            .background(.ultraThinMaterial)
+            .padding(.top, AppTheme.Spacing.md)
+            .padding(.bottom, 85) // Extra padding for tab bar (70pt height + 15pt margin)
+            .background(
+                ZStack {
+                    // Solid background that extends below
+                    Rectangle()
+                        .fill(Color(.systemBackground))
+                        .ignoresSafeArea(edges: .bottom)
+                    
+                    // Blur overlay
+                    Rectangle()
+                        .fill(.ultraThinMaterial)
+                        .ignoresSafeArea(edges: .bottom)
+                }
+            )
         }
-        .ignoresSafeArea(.keyboard, edges: .bottom)
     }
 }
 

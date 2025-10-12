@@ -44,16 +44,28 @@ extension Color {
 struct AppTheme {
     /// The primary brand color, usually used for accents and highlights.
     let primary: Color
-    /// The main background color for views and screens.
-    let background: Color = Color(.systemBackground)
-    /// The secondary background color for cards and surfaces.
-    let secondaryBackground: Color = Color(.secondarySystemBackground)
-    /// Tertiary background for elevated content
-    let tertiaryBackground: Color = Color(.tertiarySystemBackground)
-    /// The surface color for cards, sheets, and secondary UI elements.
-    let surface: Color = Color(.secondarySystemBackground)
+    let primaryLight: Color
+    let primaryDark: Color
     
-    // MARK: - Text Colors (following HIG)
+    /// The main background color for views and screens.
+    let background: Color
+    /// Elevated surface color for cards (with better contrast)
+    let cardBackground: Color
+    /// Secondary card background for nested cards
+    let secondaryCardBackground: Color
+    
+    // MARK: - Premium Color Palette
+    /// Gradient colors for premium feel
+    let gradientStart: Color
+    let gradientEnd: Color
+    
+    /// Accent colors for variety
+    let accentPurple: Color = Color(hex: "#A78BFA") ?? .purple
+    let accentBlue: Color = Color(hex: "#60A5FA") ?? .blue
+    let accentPink: Color = Color(hex: "#F472B6") ?? .pink
+    let accentTeal: Color = Color(hex: "#2DD4BF") ?? .teal
+    
+    // MARK: - Text Colors (enhanced)
     /// The main color for primary text content.
     let textPrimary: Color = .primary
     /// The color for secondary or less prominent text.
@@ -63,15 +75,15 @@ struct AppTheme {
     /// The color for quaternary text (least prominent).
     let textQuaternary: Color = Color(.quaternaryLabel)
     
-    // MARK: - Semantic Colors
+    // MARK: - Semantic Colors (enhanced)
     /// Success color for positive actions and states
-    let success: Color = .green
+    let success: Color = Color(hex: "#10B981") ?? .green
     /// Warning color for caution states
-    let warning: Color = .orange
+    let warning: Color = Color(hex: "#F59E0B") ?? .orange
     /// Error color for destructive actions and errors
-    let error: Color = .red
+    let error: Color = Color(hex: "#EF4444") ?? .red
     /// Info color for informational content
-    let info: Color = .blue
+    let info: Color = Color(hex: "#3B82F6") ?? .blue
     
     // MARK: - Design Tokens
     
@@ -83,9 +95,11 @@ struct AppTheme {
     static let smallCornerRadius: CGFloat = 8
     
     /// Premium shadow for cards and elevated elements
-    let cardShadow: Color = Color.black.opacity(0.05)
+    let cardShadow: Color
     /// Subtle shadow for interactive elements
-    let subtleShadow: Color = Color.black.opacity(0.03)
+    let subtleShadow: Color
+    /// Strong shadow for emphasis
+    let strongShadow: Color
     
     /// Spacing constants following Apple HIG 8pt grid system
     struct Spacing {
@@ -135,8 +149,77 @@ struct AppTheme {
         static let footnote: Font = .footnote.weight(.regular)
     }
 
-    init(config: AppConfig) {
-        // Initialize the primary color from the configuration's hex string, fallback to .green if invalid.
-        self.primary = Color(hex: config.brandPrimaryHex) ?? .green
+    init(config: AppConfig, colorScheme: ColorScheme = .light) {
+        // Initialize the primary color from the configuration's hex string
+        self.primary = Color(hex: config.brandPrimaryHex) ?? Color(hex: "#6B8E7F")!
+        
+        // Create lighter and darker variants
+        self.primaryLight = Color(hex: "#88A599") ?? self.primary.opacity(0.7)
+        self.primaryDark = Color(hex: "#4F6A5E") ?? self.primary
+        
+        // Gradient colors based on primary
+        self.gradientStart = self.primary
+        self.gradientEnd = self.primaryLight
+        
+        // Dynamic backgrounds based on color scheme parameter (no UIKit lookup needed!)
+        let isDark = colorScheme == .dark
+        
+        if isDark {
+            // Dark mode - elevate cards with lighter colors
+            self.background = Color(hex: "#000000") ?? Color(.systemBackground)
+            self.cardBackground = Color(hex: "#1C1C1E") ?? Color(.secondarySystemBackground)
+            self.secondaryCardBackground = Color(hex: "#2C2C2E") ?? Color(.tertiarySystemBackground)
+            
+            // Shadows for dark mode
+            self.cardShadow = Color.black.opacity(0.3)
+            self.subtleShadow = Color.black.opacity(0.2)
+            self.strongShadow = Color.black.opacity(0.5)
+        } else {
+            // Light mode - cards with subtle tint and better contrast
+            self.background = Color(hex: "#F5F5F7") ?? Color(.systemBackground)
+            self.cardBackground = Color.white
+            self.secondaryCardBackground = Color(hex: "#FAFAFA") ?? Color(.secondarySystemBackground)
+            
+            // Shadows for light mode
+            self.cardShadow = Color.black.opacity(0.08)
+            self.subtleShadow = Color.black.opacity(0.04)
+            self.strongShadow = Color.black.opacity(0.15)
+        }
+    }
+    
+    // MARK: - Premium Card Style
+    
+    /// Creates a premium card style with gradient border
+    func premiumCardStyle() -> some View {
+        return AnyView(
+            RoundedRectangle(cornerRadius: AppTheme.cardCornerRadius)
+                .fill(cardBackground)
+                .shadow(color: cardShadow, radius: 8, x: 0, y: 4)
+                .overlay(
+                    RoundedRectangle(cornerRadius: AppTheme.cardCornerRadius)
+                        .strokeBorder(
+                            LinearGradient(
+                                colors: [primary.opacity(0.3), primary.opacity(0.1)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1
+                        )
+                )
+        )
+    }
+    
+    /// Creates a gradient card background
+    func gradientCardBackground() -> some View {
+        return AnyView(
+            LinearGradient(
+                colors: [
+                    gradientStart.opacity(0.15),
+                    gradientEnd.opacity(0.05)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
     }
 }
