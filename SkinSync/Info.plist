@@ -16,7 +16,7 @@
 		</dict>
 	</array>
 	<key>OpenAI_API_Key</key>
-	<string>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</string>
+	<string>"Please enter your OpenAI API key here"</string>
 	<key>OpenUV_API_Key</key>
 	<string>openuv-2sy4amrmgcdf6jo-io</string>
 	<key>Privacy - Local notifications Usage Description</key>
